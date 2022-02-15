@@ -1,5 +1,8 @@
 # vscode
 .vscode
+.history
+
+
 
 # hardhat
 artifacts

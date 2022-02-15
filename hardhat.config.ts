@@ -15,69 +15,32 @@ import "./tasks/balance";
 import "./tasks/block-number";
 import "./tasks/create-collectibles";
 
-const MAINNET_RPC_URL =
-    process.env.MAINNET_RPC_URL ||
-    process.env.ALCHEMY_MAINNET_RPC_URL ||
-    "https://eth-mainnet.alchemyapi.io/v2/your-api-key";
-const RINKEBY_RPC_URL =
-    process.env.RINKEBY_RPC_URL ||
-    "https://eth-rinkeby.alchemyapi.io/v2/your-api-key";
-const KOVAN_RPC_URL =
-    process.env.KOVAN_RPC_URL ||
-    "https://eth-kovan.alchemyapi.io/v2/your-api-key";
-const MNEMONIC = process.env.MNEMONIC || "your mnemonic";
-const ETHERSCAN_API_KEY =
-    process.env.ETHERSCAN_API_KEY || "Your etherscan API key";
-// optional
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "your private key";
-const PINATA_API_KEY = process.env.PINATA_API_KEY;
-const PINATA_API_SECRET = process.env.PINATA_API_SECRET;
 
+// 0x5e6ab24fc08d53a4ed77aa1a61d08fdb519c080f
+const PRIVATE_KEY = "0xbf919b7161676e72f22662fc352ae667f9fc418bd0ccc14f75386fb23904f739";
+
+
+const accounts = {
+    // use default accounts
+    mnemonic: `test test test test test test test test test test test junk`,
+};
 module.exports = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            // // If you want to do some forking, uncomment this
-            // forking: {
-            //   url: MAINNET_RPC_URL
-            // }
-        },
-        localhost: {},
-        kovan: {
-            url: KOVAN_RPC_URL,
-            // accounts: [PRIVATE_KEY],
-            accounts: {
-                mnemonic: MNEMONIC,
-            },
-            saveDeployments: true,
-        },
-        rinkeby: {
-            url: RINKEBY_RPC_URL,
-            // accounts: [PRIVATE_KEY],
-            accounts: {
-                mnemonic: MNEMONIC,
-            },
-            saveDeployments: true,
-        },
-        ganache: {
-            url: "http://localhost:8545",
-            accounts: {
-                mnemonic: MNEMONIC,
+            accounts,
+            chainId: 1284,
+            name: 'moonbeam',
+            loggingEnabled: false,
+            forking: {
+                url: "https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa",
+                blockNumber: 180643,
             },
         },
-    },
-    etherscan: {
-        // Your API key for Etherscan
-        // Obtain one at https://etherscan.io/
-        apiKey: ETHERSCAN_API_KEY,
-    },
-    namedAccounts: {
-        deployer: {
-            default: 0, // here this will by default take the first account as deployer
-            1: 0, // similarly on mainnet it will take the first account as deployer.
-        },
-        feeCollector: {
-            default: 1,
+        moonbeam: {
+            url: 'https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa',
+            chainId: 1284, //(hex: 0x504),
+            accounts: [PRIVATE_KEY] // Insert your private key here
         },
     },
     solidity: {
