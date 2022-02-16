@@ -5,10 +5,11 @@ import { readFileSync, writeFileSync } from "fs";
 import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
 import { formatEther, Interface } from "ethers/lib/utils";
 import { UniswapV2Query } from "typechain";
+import { sqrt } from "./math";
+import { boolean } from "hardhat/internal/core/params/argumentTypes";
 
 
-
-const UNISWAP_FACTORIES = [
+export const UNISWAP_FACTORIES = [
     //Beamswap
     "0x985BcA32293A7A496300a48081947321177a86FD",
     //Solarflaire
@@ -70,7 +71,7 @@ export const getUniswapPairs = async (provider: providers.Provider): Promise<str
         .reduce((agg, current) => { return [...agg, ...current] })
 }
 
-const getTokenAddresses = async (address: string): Promise<V2PoolWithToken> => {
+export const getTokenAddresses = async (address: string): Promise<V2PoolWithToken> => {
     const c: Contract = new Contract(address, UNISWAP_POOL_ABI, MOONBEAM_PROVIDER);
     const t0 = c.token0();
     const t1 = c.token1();
@@ -135,6 +136,7 @@ export const fetchBalanceFromUniswap = async (pools: V2PoolWithToken[], uniswapV
             token1: pools[idx].token1.toLowerCase(),
             reserve0: pool[0],
             reserve1: pool[1],
+            k: pool[3],
             lastBlockModified: pool[2],
             address: pools[idx].address
         }))
@@ -159,7 +161,8 @@ export const calcPoolPrices = (pool: V2PoolWithReserve, target: string): V2PoolW
 
 
         if (denominator.lte(0)) {
-            return BigNumber.from("123434334340304984093803984093840498309840938409384039")
+            //Return undefined to filtern them out later on !
+            return undefined;
         }
         return numerator.div(denominator)
     }
@@ -172,7 +175,7 @@ export const calcPoolPrices = (pool: V2PoolWithReserve, target: string): V2PoolW
 
     }
     //Fiure out why
-    const deltaWeth = ETHER.div(100);
+    const deltaWeth = ETHER.div(1000);
     const { token0, token1, reserve0, reserve1 } = pool;
 
     if ((token0 !== target && token1 !== target)) {
@@ -183,7 +186,7 @@ export const calcPoolPrices = (pool: V2PoolWithReserve, target: string): V2PoolW
     const sellTokenPrice = pool.token0 === target ? getSellPrice({ Rtoken: reserve1, Rtarget: reserve0, deltaWeth }) : getSellPrice({ Rtoken: reserve0, Rtarget: reserve1, deltaWeth })
 
 
-    const buyTokenPriceHumanReadable = formatEther(buyTokenPrice);
+    const buyTokenPriceHumanReadable = buyTokenPrice === undefined ? "NONE" : formatEther(buyTokenPrice);
     const sellTokenPriceHumanReadable = formatEther(sellTokenPrice);
 
 
@@ -217,36 +220,57 @@ export const groupByTokens = (pools: V2PoolWithPrices[], target: string): V2Pool
     return result;
 }
 
-export const findProfitablePools = (poolsGroupedByTokens: V2PoolsGroupedByTokens) => {
 
-    const profitablePools: V2PoolWithPrices[][] = [];
-    //Out of curisosity
-    let useLessTokens = 0;
-    let count = 0;
+export const calcProfitMaximizingTrade = (
+    pool0ReserveA: BigNumber,
+    pool0ReserveB: BigNumber,
+    pool1ReserveA: BigNumber,
+    pool1ReserveB: BigNumber): [BigNumber, boolean] => {
+    const U = pool1ReserveA.mul(pool0ReserveB).div(pool1ReserveB);
+    const direction: boolean = U.lt(pool0ReserveA);
 
-    for (const [_, poolsContainingTheSameToken] of Object.entries(poolsGroupedByTokens)) {
-        count++;
-        if (poolsContainingTheSameToken.length <= 1) {
-            useLessTokens++;
-            continue;
-        }
-        poolsContainingTheSameToken.forEach(outerPool => {
-            poolsContainingTheSameToken.forEach(innerPool => {
-                if (innerPool.sellTokenPrice.gt(outerPool.buyTokenPrice)) {
-                    profitablePools.push([outerPool, innerPool]);
-                }
-            })
-        })
+    const k = pool1ReserveA.mul(pool1ReserveB);
+
+
+    const inputTokenOne = direction ? pool0ReserveA : pool0ReserveB;
+    const inputTokenTwo = direction ? pool0ReserveB : pool0ReserveA;
+
+    const thausand = BigNumber.from(1000);
+    const nineNineSeven = BigNumber.from(997);
+    const zero = BigNumber.from(0);
+
+    const nominator = k.mul(thausand).mul(inputTokenOne);
+    const denominator = inputTokenTwo.mul(nineNineSeven);
+
+    const leftSide = sqrt(nominator.div(denominator));
+
+    let rightSide = zero;
+
+    if (direction) {
+        const nominator = pool1ReserveA.mul(thausand)
+        const denominator = nineNineSeven
+        rightSide = nominator.div(denominator);
+    } else {
+        const nominator = pool1ReserveB.mul(thausand)
+        const denominator = nineNineSeven
+        rightSide = nominator.div(denominator);
     }
-    console.log(`got ${useLessTokens} useless tokens from ${count}`);
-    return profitablePools;
+
+    if (leftSide.lt(rightSide)) {
+        return [zero, direction]
+    }
+
+    const amountIn = leftSide.sub(rightSide);
+
+    return [amountIn, direction];
+
 }
 
 export interface V2PoolsGroupedByTokens { [tokenAddress: string]: V2PoolWithPrices[] }
 
 
 export interface V2PoolWithPrices extends V2PoolWithReserve {
-    buyTokenPrice: BigNumber,
+    buyTokenPrice: BigNumber | undefined,
     buyTokenPriceHumanReadable: string
     sellTokenPrice: BigNumber,
     sellTokenPriceHumanReadable: string
@@ -257,6 +281,7 @@ export interface V2PoolWithReserve {
     token1: string,
     reserve0: BigNumber;
     reserve1: BigNumber;
+    k: BigNumber;
     lastBlockModified: BigNumber;
     address: string;
 
@@ -287,6 +312,31 @@ const main = () => {
 
 
 }
+
+// export const findProfitablePools = (poolsGroupedByTokens: V2PoolsGroupedByTokens) => {
+
+//     const profitablePools: V2PoolWithPrices[][] = [];
+//     //Out of curisosity
+//     let useLessTokens = 0;
+//     let count = 0;
+
+//     for (const [_, poolsContainingTheSameToken] of Object.entries(poolsGroupedByTokens)) {
+//         count++;
+//         if (poolsContainingTheSameToken.length <= 1) {
+//             useLessTokens++;
+//             continue;
+//         }
+//         poolsContainingTheSameToken.forEach(outerPool => {
+//             poolsContainingTheSameToken.forEach(innerPool => {
+//                 if (outerPool.buyTokenPrice !== undefined && innerPool.sellTokenPrice.gt(outerPool.buyTokenPrice)) {
+//                     profitablePools.push([outerPool, innerPool]);
+//                 }
+//             })
+//         })
+//     }
+//     console.log(`got ${useLessTokens} useless tokens from ${count}`);
+//     return profitablePools;
+// }
 
 // function getTokensIn(reserveIn: BigNumber, reserveOut: BigNumber, amountOut: BigNumber): BigNumber {
 //     return getAmountIn(reserveIn, reserveOut, amountOut);
