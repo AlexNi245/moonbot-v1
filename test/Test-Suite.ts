@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 import { ethers } from "hardhat";
 import { UniswapV2Query } from "typechain";
-import { calcPoolPrices, calcProfitMaximizingTrade, fetchBalanceFromUniswap, filterEmptyPools, groupByTokens, V2PoolWithPrices, V2PoolWithToken } from "./../bot/moonbot";
+import { calcPoolPrices, calcProfitMaximizingTrade, fetchBalanceFromUniswap, filterEmptyPools, groupByTokens, V2PoolWithPrices, V2PoolWithToken } from "../bot/uniswap/pairs";
 import { calcDeltas, getStableCoinPools } from "./../bot/stable";
 
 
@@ -47,8 +47,6 @@ describe("Token contract", function () {
         const withoutEmptyPools = poolsWithBalances.filter(filterEmptyPools);
 
         const poolsWithPrices = withoutEmptyPools.map(p => calcPoolPrices(p, TARGET))
-
-        const test = poolsWithPrices.find((p) => { return p.address.toLowerCase() === "0xab89ed43d10c7ce0f4d6f21616556aecb71b9c5f" })
 
 
 

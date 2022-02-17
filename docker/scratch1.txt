@@ -1,0 +1,26 @@
+docker run --network="host" \
+-v "/mnt/disks/ssd" \
+-u (id -u niko2424 ):(id -g niko2424 ) \
+purestake/moonbeam-tracing:v0.20.1-1201-5590 \
+--base-path=/data \
+--chain moonbeam \
+--name="Moonbeam-Tutorial" \
+--pruning archive \
+--state-cache-size 1 \
+--db-cache 16000 \
+--ethapi=debug,trace,txpool \
+--wasm-runtime-overrides=/moonbeam/moonbeam-substitutes-tracing \
+--runtime-cache-size 32 \
+-- \
+--execution wasm \
+--pruning archive \
+--name="Moonbeam-Tutorial (Embedded Relay)" \
+--unsafe-ws-external \
+--unsafe-rpc-external 
+
+
+
+0xaCd79A6288363220769551bbAD2cEEA4Af0a954F
+0xb5b2444eDF79b00d40f463f79158D1187a0D0c25
+
+docker pull purestake/moonbeam-tracing:v0.20.1-1201-latest
