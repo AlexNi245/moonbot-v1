@@ -1,6 +1,5 @@
-import { abi as UNISWAP_FACTORY_ABI } from "@uniswap/v2-core/build/IUniswapV2Factory.json"
-import { readFileSync, writeFileSync } from "fs";
-import { BigNumber, Contract, ethers, providers, Signer, } from "ethers";
+import { abi as UNISWAP_FACTORY_ABI } from "@uniswap/v2-core/build/IUniswapV2Factory.json";
+import { ethers, providers } from "ethers";
 
 var MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
     chainId: 1284,

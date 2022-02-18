@@ -28,25 +28,33 @@ module.exports = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            accounts,
-            chainId: 1284,
-            name: 'moonbeam',
-            loggingEnabled: false,
-            forking: {
-                url: "https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa",
-                blockNumber: 180643,
-            },
+            // accounts,
+            // chainId: 1284,
+            // name: 'moonbeam',
+            // loggingEnabled: false,
+            // forking: {
+            //     url: "https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa",
+            //     blockNumber: 180643,
+            // },
+            allowUnlimitedContractSize: true
         },
         moonbeam: {
             url: 'https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa',
             chainId: 1284, //(hex: 0x504),
             accounts: [PRIVATE_KEY] // Insert your private key here
         },
+        localhost: {},
     },
     solidity: {
         compilers: [
             {
-                version: "0.8.4",
+                version: "0.5.1",
+            },
+            {
+                version: "0.5.16",
+            },
+            {
+                version: "0.6.6",
             },
         ],
     },

@@ -1,4 +1,4 @@
-pragma solidity >=0.8.0;
+pragma solidity >=0.6.6;
 
 //import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -8,7 +8,7 @@ contract UniswapV2Query {
     function queryReserves(
         uint256 start,
         uint256 stop,
-        address[] calldata _pools
+        address[] memory _pools
     ) public view returns (uint256[4][] memory) {
         uint256 i = start;
         uint256[4][] memory result = new uint256[4][](_pools.length);
