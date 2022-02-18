@@ -9,7 +9,6 @@ import "./libraries/SafeMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
-import "hardhat/console.sol";
 
 contract UniswapV2Router02 is IUniswapV2Router02 {
     using SafeMath for uint256;
@@ -42,7 +41,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
         if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
-            console.log("PAIR DOSENT EXISTS");
             IUniswapV2Factory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(
@@ -51,8 +49,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
             tokenB
         );
         if (reserveA == 0 && reserveB == 0) {
-            console.log("Ammount desired");
-            console.log(msg.value);
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
             uint256 amountBOptimal = UniswapV2Library.quote(
@@ -111,9 +107,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
             amountBMin
         );
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
-
-        console.log("GOT PAIR", pair);
-
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
         liquidity = IUniswapV2Pair(pair).mint(to);
