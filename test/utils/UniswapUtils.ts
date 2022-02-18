@@ -23,11 +23,10 @@ export const setUpRouter = async (uniswapFactory: UniswapV2Factory, weth: WETH9)
 export const getPair = async (address: string): Promise<UniswapV2Pair> => {
     const f = await hre.ethers.getContractFactory("UniswapV2Pair")
     const pair = f.attach(address) as UniswapV2Pair;
-    console.log("Pool @ ", pair.address)
     return pair;
 }
 
-export const getPricesOfPair = async (pool: UniswapV2Pair,): Promise<{ price1: string; price2: string; }> => {
+export const getPricesOfPair = async (pool: UniswapV2Pair,): Promise<{ priceA: string; priceB: string; }> => {
     const [reserveA, reserveB] = await pool.getReserves();
 
     const reserveAHex = reserveA._hex.substring(2);
@@ -38,9 +37,16 @@ export const getPricesOfPair = async (pool: UniswapV2Pair,): Promise<{ price1: s
     const calc1 = BigInteger(reserveAHex, 16).divmod(BigInteger(reserveBHex, 16))
     const calc2 = BigInteger(reserveBHex, 16).divmod(BigInteger(reserveAHex, 16))
 
-    const price1 = calc1.quotient.toString() + "," + calc1.remainder.toJSNumber(); //Is 0.1 expect 0.25
-    const price2 = calc2.quotient.toString() + "," + calc2.remainder.toJSNumber(); //Is 4.0 expect 4.0
+    const priceA = calc1.quotient.toString() + "," + calc1.remainder.toJSNumber(); //Is 0.1 expect 0.25
+    const priceB = calc2.quotient.toString() + "," + calc2.remainder.toJSNumber(); //Is 4.0 expect 4.0
 
-    return { price1, price2 }
+    return { priceA, priceB }
 
+}
+
+export const printPricesOfPair = async (...pair: UniswapV2Pair[]) => {
+    await Promise.all(pair.map(async p => {
+        const { priceA, priceB } = await getPricesOfPair(p);
+        console.log(`WETH / DAI : ${priceA} DAI /WETH ${priceB} @ ${p.address}`);
+    }))
 }

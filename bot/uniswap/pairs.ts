@@ -3,12 +3,11 @@ import { abi as UNISWAP_POOL_ABI } from "@uniswap/v2-core/build/IUniswapV2Pair.j
 import { BigNumber, Contract, ethers } from "ethers";
 import { formatEther, Interface } from "ethers/lib/utils";
 import { V2PoolsGroupedByTokens, V2PoolWithPrices, V2PoolWithReserve, V2PoolWithToken } from "../interfaces";
-import { MOONBEAM_PROVIDER } from "../moonbot";
 import { ETHER } from "./../math";
 
 
-export const getTokenAddresses = async (address: string): Promise<V2PoolWithToken> => {
-    const c: Contract = new Contract(address, UNISWAP_POOL_ABI, MOONBEAM_PROVIDER);
+export const getTokenAddresses = async (provider: StaticJsonRpcProvider, address: string): Promise<V2PoolWithToken> => {
+    const c: Contract = new Contract(address, UNISWAP_POOL_ABI, provider);
     const t0 = c.token0();
     const t1 = c.token1();
 

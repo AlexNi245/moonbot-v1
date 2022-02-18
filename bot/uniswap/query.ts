@@ -1,11 +1,11 @@
-import { MOONBEAM_PROVIDER } from "../moonbot";
 import { BigNumber, Contract, Signer } from "ethers";
 import { Batch, V2PoolWithReserve, V2PoolWithToken } from "../interfaces";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 import QUERY_ABI from "./queryabi.json"
 
 
-export const fetchBalanceFromUniswap = async (pools: V2PoolWithToken[],): Promise<V2PoolWithReserve[]> => {
+export const fetchBalanceFromUniswap = async (provider: StaticJsonRpcProvider, uniswapV2QueryAddress: string, pools: V2PoolWithToken[],): Promise<V2PoolWithReserve[]> => {
 
     const BATCH_SIZE = 100;
 
@@ -21,11 +21,11 @@ export const fetchBalanceFromUniswap = async (pools: V2PoolWithToken[],): Promis
 
         currentBatch.poolsAddress.push(e.address);
         currentBatch.start = BigNumber.from(0);
-        currentBatch.stop = BigNumber.from(idx % BATCH_SIZE);
+        currentBatch.stop = BigNumber.from((idx % BATCH_SIZE)+1);
     });
 
 
-    const uniswapV2Query = new Contract("0xA56a54854F1C99A66A4C786CcbA36143B6C33df8", QUERY_ABI,MOONBEAM_PROVIDER)
+    const uniswapV2Query = new Contract(uniswapV2QueryAddress, QUERY_ABI, provider)
     const promises = batches.map(({ start, stop, poolsAddress }) => uniswapV2Query.queryReserves(start, stop, poolsAddress));
 
     const r = await Promise.all(promises);

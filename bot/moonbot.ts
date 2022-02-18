@@ -1,23 +1,26 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { V2PoolWithPrices, V2PoolWithReserve, V2PoolWithToken } from "./interfaces";
 import { calcProfitMaximizingTrade } from "./math";
 import { calcPoolPrices, filterEmptyPools, getTokenAddresses, groupByTokens } from "./uniswap/pairs";
 import { fetchBalanceFromUniswap } from "./uniswap/query";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
+import { formatEther, parseEther } from "ethers/lib/utils";
 
 
 
 
 
 
+export const evaluteProfitInPools = async (provider: StaticJsonRpcProvider, uniswapV2QueryAddress: string, pools: string[], target: string): Promise<[BigNumber, boolean][]> => {
 
-export const evaluteProfitInPools = async (pools: string[], target: string) => {
-
-    const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(getTokenAddresses));
-    const poolsWithReserve: V2PoolWithReserve[] = await fetchBalanceFromUniswap(poolWithTokens);
+    const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(p => getTokenAddresses(provider, p)));
+    const poolsWithReserve: V2PoolWithReserve[] = await fetchBalanceFromUniswap(provider, uniswapV2QueryAddress, poolWithTokens);
 
     const withoutEmptyPools: V2PoolWithReserve[] = poolsWithReserve.filter(filterEmptyPools);
 
+
     const grouped = groupByTokens(withoutEmptyPools, target);
+
 
     const groupedFiltered = [];
     const res = [];
@@ -35,9 +38,8 @@ export const evaluteProfitInPools = async (pools: string[], target: string) => {
 
         res.push(calcProfitMaximizingTrade(pool0ReserveA, pool0ReserveB, pool1ReserveA, pool1ReserveB))
     }
-
-    console.log(groupedFiltered)
-    console.log(res)
+    console.log(`Buy Dai worth of  ${formatEther(res[0][0])} Eth direction : ${res[0][1]}`)
+    return res;
 
 }
 
