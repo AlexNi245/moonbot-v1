@@ -7,10 +7,7 @@ import { fetchBalanceFromUniswap } from "./uniswap/query";
 
 
 
-export var MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
-    chainId: 1284,
-    name: 'moonbeam'
-});
+
 
 
 export const evaluteProfitInPools = async (pools: string[], target: string) => {
