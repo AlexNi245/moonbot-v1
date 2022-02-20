@@ -2,11 +2,12 @@ import { ethers, Transaction } from "ethers";
 import { getPairFromFactory } from "./uniswap/factory";
 import { evaluteProfitInPools } from "./moonbot";
 
-
+import {printEth} from ".././utils/ERC20Utils"
+import { printArbitrageOpportunities } from "../utils/PrintUtils";
 //Wglmr
 const TARGET = "0xacc15dc74880c9944775448304b263d191c6077f";
 //
-const QUERY_ADDRESS = "0xA56a54854F1C99A66A4C786CcbA36143B6C33df8";
+const QUERY_ADDRESS = "0xF66face6D10eEF9a9624F255D3931e9a1715F933";
 
 
 const ROUTER = [
@@ -33,20 +34,10 @@ export const classifier = () => {
 
         console.log("New Block ", blocknumber)
         transactions.forEach(({ to, data, blockNumber }) => {
+            if (ROUTER.includes(to!)) {
 
-
-            if (ROUTER.includes(to!) && data.substring(0, 10) === "0x38ed1739") {
-                handleSwapExactTokensForTokens(data);
+                evaluateTransaction(data)
             }
-
-            if (ROUTER.includes(to!) && data.substring(0, 10) === "0x7ff36ab5") {
-                handleSwapExactETHForTokens(data);
-            }
-
-            if ((ROUTER.includes(to!) && data.substring(0, 10) === "0xfb3bdb41")) {
-                handleSwapETHForExactTokens(data);
-            }
-
         })
     })
 
@@ -54,56 +45,24 @@ export const classifier = () => {
 
 classifier()
 
-const handleSwapExactTokensForTokens = async (data: string) => {
+const evaluateTransaction = async (data: string) => {
     const start = new Date();
-    console.log("Got Tranaction swapExactTokensForTokens to router");
-    console.log(data);
+    console.log("Got Tranaction from router");
 
+    const decodedPoolAddresses = decodeRouterFunctions(data);
 
-    const iface = new ethers.utils.Interface(['function swapExactTokensForTokens(uint256,uint256,address[],address,uint256)'])
-    const decoded = iface.decodeFunctionData('swapExactTokensForTokens', data);
-
-
-    const affectedPools = await getAllAllAffectedPairs(decoded[2]);
-
-    console.log(decoded);
+    const affectedPools = await getAllAllAffectedPairs(decodedPoolAddresses);
 
     console.log("the following pools are affected : ", affectedPools);
-
-    await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+    if (affectedPools.length > 0) {
+       const profit = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+    console.log(profit.map(printArbitrageOpportunities));
+    }
     console.log("Evaluation took : ", new Date().getTime() - start.getTime())
 }
 
-const handleSwapExactETHForTokens = async (data: string) => {
-    console.log("Got Tranaction swapExactETHForTokens to router");
 
 
-    const iface = new ethers.utils.Interface(['function swapExactETHForTokens(uint256,address[],address,uint256)'])
-    const decoded = iface.decodeFunctionData('swapExactETHForTokens', data);
-
-    // const affectedPools = await getAllAllAffectedPairs(decoded[2]);
-
-    console.log(decoded);
-
-    // console.log("the following pools are affected : ", affectedPools);
-}
-
-const handleSwapETHForExactTokens = async (data: string) => {
-    console.log("Got Tranaction swapETHForExactTokens to router");
-
-
-    const iface = new ethers.utils.Interface(['function swapETHForExactTokens(uint256,address[],address,uint256)'])
-    const decoded = iface.decodeFunctionData('swapETHForExactTokens', data);
-
-    //  const affectedPools = await getAllAllAffectedPairs(decoded[2]);
-
-    console.log(decoded);
-
-    //  console.log("the following pools are affected : ", affectedPools);
-}
-
-
-const handleSwapExactTokensForETH = () => { }
 
 
 
@@ -120,4 +79,64 @@ const getAllAllAffectedPairs = async (tokenAddresses: string[]) => {
     const allpools = await Promise.all(promises);
 
     return Array.from(new Set(allpools)).filter(a => a !== "0x0000000000000000000000000000000000000000")
+}
+
+const decodeRouterFunctions = (data: string): string[] => {
+
+    const methodSignature = data.substring(0, 10);
+
+
+    if (methodSignature === "38ed1739") {
+        const iface = new ethers.utils.Interface(['function swapExactTokensForTokens(uint256,uint256,address[],address,uint256)	'])
+        const decoded = iface.decodeFunctionData('swapExactTokensForTokens', data);
+
+        return decoded[2];
+    }
+
+    if (methodSignature === "8803dbee") {
+        const iface = new ethers.utils.Interface(['function swapTokensForExactTokens(uint256,uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapTokensForExactTokens', data);
+
+        return decoded[2];
+    }
+
+    if (methodSignature === "0x7ff36ab5") {
+        const iface = new ethers.utils.Interface(['function swapExactETHForTokens(uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapExactETHForTokens', data);
+
+        return decoded[1];
+    }
+
+    if (methodSignature === "0x7ff36ab5") {
+        const iface = new ethers.utils.Interface(['function swapExactETHForTokens(uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapExactETHForTokens', data);
+
+        return decoded[1];
+    }
+
+    if (methodSignature === "0x4a25d94a") {
+        const iface = new ethers.utils.Interface(['function swapTokensForExactETH(uint256,uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapTokensForExactETH', data);
+
+        return decoded[2];
+    }
+
+    if (methodSignature === "0x18cbafe5") {
+        const iface = new ethers.utils.Interface(['function swapExactTokensForETH(uint256,uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapExactTokensForETH', data);
+
+        return decoded[2];
+    }
+
+    if (methodSignature === "0xfb3bdb41") {
+        const iface = new ethers.utils.Interface(['function swapETHForExactTokens(uint256,address[],address,uint256)'])
+        const decoded = iface.decodeFunctionData('swapETHForExactTokens', data);
+
+        return decoded[1];
+
+    }
+
+
+
+    return [];
 }
