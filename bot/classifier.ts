@@ -3,15 +3,25 @@ import { getPairFromFactory } from "./uniswap/factory";
 import { evaluteProfitInPools } from "./moonbot";
 
 
+//Wglmr
 const TARGET = "0xacc15dc74880c9944775448304b263d191c6077f";
+//
+const QUERY_ADDRESS = "0xA56a54854F1C99A66A4C786CcbA36143B6C33df8";
+
+
+const ROUTER = [
+    //Flaire Router
+    "0xd3b02ff30c218c7f7756ba14bca075bf7c2c951e",
+    //BeamSwapRouter
+    "0x96b244391D98B62D19aE89b1A4dCcf0fc56970C7"
+]
+
+const MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
+    chainId: 1284,
+    name: 'moonbeam'
+});
 
 export const classifier = () => {
-
-
-    const targets = [
-        "0xd3b02ff30c218c7f7756ba14bca075bf7c2c951e",
-        "0x96b244391D98B62D19aE89b1A4dCcf0fc56970C7"
-    ]
 
     const provider = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
         chainId: 1284,
@@ -25,15 +35,15 @@ export const classifier = () => {
         transactions.forEach(({ to, data, blockNumber }) => {
 
 
-            if (targets.includes(to!) && data.substring(0, 10) === "0x38ed1739") {
+            if (ROUTER.includes(to!) && data.substring(0, 10) === "0x38ed1739") {
                 handleSwapExactTokensForTokens(data);
             }
 
-            if (targets.includes(to!) && data.substring(0, 10) === "0x7ff36ab5") {
+            if (ROUTER.includes(to!) && data.substring(0, 10) === "0x7ff36ab5") {
                 handleSwapExactETHForTokens(data);
             }
 
-            if ((targets.includes(to!) && data.substring(0, 10) === "0xfb3bdb41")) {
+            if ((ROUTER.includes(to!) && data.substring(0, 10) === "0xfb3bdb41")) {
                 handleSwapETHForExactTokens(data);
             }
 
@@ -60,7 +70,7 @@ const handleSwapExactTokensForTokens = async (data: string) => {
 
     console.log("the following pools are affected : ", affectedPools);
 
-    await evaluteProfitInPools(affectedPools, TARGET);
+    await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
     console.log("Evaluation took : ", new Date().getTime() - start.getTime())
 }
 
@@ -93,7 +103,7 @@ const handleSwapETHForExactTokens = async (data: string) => {
 }
 
 
-const handleSwapExactTokensForETH = ()=>{}
+const handleSwapExactTokensForETH = () => { }
 
 
 

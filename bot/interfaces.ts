@@ -1,4 +1,5 @@
 import { BigNumber } from "ethers";
+import { string } from "hardhat/internal/core/params/argumentTypes";
 
 export interface V2PoolsGroupedByTokens { [tokenAddress: string]: V2PoolWithReserve[] }
 
@@ -15,9 +16,9 @@ export interface V2PoolWithReserve {
     token1: string,
     reserve0: BigNumber;
     reserve1: BigNumber;
-    k: BigNumber;
     lastBlockModified: BigNumber;
     address: string;
+    factory: string;
 
 }
 
@@ -31,4 +32,17 @@ export interface Batch {
     poolsAddress: string[];
     start: BigNumber;
     stop: BigNumber
+}
+
+
+export type Path = [string, string]
+
+export interface ArbitrageOpportunity {
+    token0: string,
+    token1: string,
+    path: Path;
+    amountIn: BigNumber;
+    direction: boolean;
+    factories: [string, string];
+
 }

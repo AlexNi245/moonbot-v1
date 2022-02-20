@@ -1,8 +1,8 @@
-import { BigNumber, Contract, Signer } from "ethers";
-import { Batch, V2PoolWithReserve, V2PoolWithToken } from "../interfaces";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
+import { BigNumber, Contract } from "ethers";
+import { Batch, V2PoolWithReserve, V2PoolWithToken } from "../interfaces";
+import QUERY_ABI from "./queryabi.json";
 
-import QUERY_ABI from "./queryabi.json"
 
 
 export const fetchBalanceFromUniswap = async (provider: StaticJsonRpcProvider, uniswapV2QueryAddress: string, pools: V2PoolWithToken[],): Promise<V2PoolWithReserve[]> => {
@@ -21,23 +21,27 @@ export const fetchBalanceFromUniswap = async (provider: StaticJsonRpcProvider, u
 
         currentBatch.poolsAddress.push(e.address);
         currentBatch.start = BigNumber.from(0);
-        currentBatch.stop = BigNumber.from((idx % BATCH_SIZE)+1);
+        currentBatch.stop = BigNumber.from((idx % BATCH_SIZE) + 1);
     });
 
 
+
     const uniswapV2Query = new Contract(uniswapV2QueryAddress, QUERY_ABI, provider)
+
     const promises = batches.map(({ start, stop, poolsAddress }) => uniswapV2Query.queryReserves(start, stop, poolsAddress));
 
-    const r = await Promise.all(promises);
-    return r
-        .reduce((agg, cur) => ([...agg, ...cur]), [])
-        .map((pool: any, idx: number) => ({
+    const resolvedBatches = await Promise.all(promises);
+
+    const [pairs, factories]: [BigNumber[][], string[]] = resolvedBatches.reduce((agg, cur) => ([...agg, ...cur]), []);
+
+    return pairs
+        .map(([reserve0, reserve1, lastBlockModified], idx: number) => ({
             token0: pools[idx].token0.toLowerCase(),
             token1: pools[idx].token1.toLowerCase(),
-            reserve0: pool[0],
-            reserve1: pool[1],
-            k: pool[3],
-            lastBlockModified: pool[2],
+            reserve0,
+            reserve1,
+            factory: factories[idx],
+            lastBlockModified,
             address: pools[idx].address
         }))
 }

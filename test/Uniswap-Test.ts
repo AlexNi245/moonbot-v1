@@ -8,6 +8,10 @@ import { mockToken, mockWeth } from "./utils/Erc20Utils";
 import { getPricesOfPair, getPair, setUpFactory, setUpRouter, printPricesOfPair } from "./utils/UniswapUtils";
 import { evaluteProfitInPools } from "./../bot/moonbot";
 import { mockUniswapV2Query } from "./utils/MoonbotUtils";
+import { ArbitrageOpportunity } from "./../bot/interfaces";
+import { executeTradesViaRouter, getRouter } from "./../bot/uniswap/executor";
+import { Dai, Eth, printDai, printEth, USDT } from "./../utils/ERC20Utils"
+import { assert } from "console";
 
 describe("Uniswaptest", function () {
     let dai: IERC20;
@@ -32,24 +36,19 @@ describe("Uniswaptest", function () {
 
     let uniswapV2Query: UniswapV2Query;
 
-
-    const Dai = (x: string | number) => ethers.utils.parseUnits(x.toString(), 18);
-    const USDT = (x: string | number) => ethers.utils.parseUnits(x.toString(), 6);
-    const Eth = (x: string | number) => ethers.utils.parseEther(x.toString());
+    let getRouter: getRouter;
 
 
-    const printDai = (x: BigNumberish) => ethers.utils.formatUnits(x, 18);
-    const printEth = (x: BigNumberish) => ethers.utils.formatEther(x);
 
-    before(async function () {
+    beforeEach(async function () {
         [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
         console.log("OWNER @ ", owner.address)
         console.log("ADDR1 @ ", addr1.address)
         console.log("ADDR2 @ ", addr2.address)
 
         weth = await mockWeth();
-        dai = await mockToken("Dai", Dai(10000000))
-        usdt = await mockToken("USDC", USDT(10000000))
+        dai = await mockToken("Dai")
+        usdt = await mockToken("USDC")
 
         uniswapV2Query = await mockUniswapV2Query();
 
@@ -63,24 +62,37 @@ describe("Uniswaptest", function () {
 
 
         await addr1.sendTransaction({ to: weth.address, value: 100000 })
-        await dai.transfer(addr1.address, Dai(3 * 1000000))
 
+        await dai.connect(owner).transfer(addr1.address, Dai(100000))
+        await usdt.connect(owner).transfer(addr1.address, USDT(100000))
 
-
+        //Allow addr1 to add liquidity
         await dai.connect(addr1).approve(routerOne.address, Dai(1000000))
         await dai.connect(addr1).approve(routerTwo.address, Dai(1000000))
         await dai.connect(addr1).approve(routerThree.address, Dai(1000000))
 
+        await usdt.connect(addr1).approve(routerOne.address, USDT(1000000))
+        await usdt.connect(addr1).approve(routerTwo.address, USDT(1000000))
+        await usdt.connect(addr1).approve(routerThree.address, USDT(1000000))
+
+
+
+        getRouter = (factoryAddress: string) => {
+            switch (factoryAddress) {
+                case uniswapFactoryOne.address: return routerOne;
+                case uniswapFactoryTwo.address: return routerTwo;
+                case uniswapFactoryThree.address: return routerThree;
+                default: throw "Router not found!"
+            }
+        }
+
+
 
     });
 
-    it("Test", async () => {
 
 
-        const addr2BeforeDai = await dai.connect(addr2).balanceOf(addr2.address);
-        const addr2BeforeEth = await addr2.getBalance();
-        console.log("Before DAI balance : ", printDai(addr2BeforeDai));
-        console.log("Before ETH balance : ", printEth(addr2BeforeEth));
+    it.skip("Trader made some profit using his own eth", async () => {
         await routerOne.connect(addr1).addLiquidityETH(
             dai.address,
             Dai(10000),
@@ -88,7 +100,7 @@ describe("Uniswaptest", function () {
             Eth(0.25),
             addr1.address,
             new Date().getTime() + 3600,
-            { value: Eth(400) }
+            { value: Eth(100) }
         ,)
 
         await routerTwo.connect(addr1).addLiquidityETH(
@@ -98,77 +110,97 @@ describe("Uniswaptest", function () {
             Eth(0.25),
             addr1.address,
             new Date().getTime() + 3600,
-            { value: Eth(350) }
+            { value: Eth(20) }
         ,)
-
 
         await routerThree.connect(addr1).addLiquidityETH(
             dai.address,
-            Dai(100),
-            Dai(100),
+            Dai(10000),
+            Dai(10000),
             Eth(0.25),
             addr1.address,
             new Date().getTime() + 3600,
-            { value: Eth(1) }
+            { value: Eth(10) }
         ,)
 
-
+        const balanceBefore = await addr2.getBalance();
+        console.log("Start trading at : ", printEth(balanceBefore));
 
         const daiWethPairOne = await getPair(await uniswapFactoryOne.getPair(dai.address, weth.address));
         const daiWethPairTwo = await getPair(await uniswapFactoryTwo.getPair(dai.address, weth.address));
         const daiWethPairThree = await getPair(await uniswapFactoryThree.getPair(dai.address, weth.address));
 
-        printPricesOfPair(daiWethPairOne, daiWethPairTwo);
-
-        const [first]: [BigNumber, boolean][] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
-
+        const oportunities: ArbitrageOpportunity[] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
             [
                 daiWethPairOne.address,
                 daiWethPairTwo.address,
-                //   daiWethPairThree.address,
+                daiWethPairThree.address,
             ], weth.address);
 
 
-        const result = await routerTwo.connect(addr2).swapExactETHForTokens(1, [
-            weth.address,
-            dai.address
-        ],
-            addr2.address, new Date().getTime() + 3600,
-            { value: first[0] }
-        );
-
-        await printPricesOfPair(daiWethPairOne, daiWethPairTwo);
+        await executeTradesViaRouter(ethers.provider, weth.address, getRouter, addr2, oportunities)
 
 
+        const balanceAfter = await addr2.getBalance();
+        console.log("Finished trading at : ", printEth(balanceAfter));
 
-        const addr2AfterDai = await dai.connect(addr2).balanceOf(addr2.address);
-        const addr2AfterEth = await addr2.getBalance();
+        const profit = balanceAfter.sub(balanceBefore);
 
-        console.log("After DAI balance : ", printDai(addr2AfterDai));
-        console.log("After ETH balance : ", printEth(addr2AfterEth));
+        console.log(`Trader made ${printEth(profit)}`);
 
-        await dai.connect(addr2).approve(routerOne.address, addr2AfterDai);
 
-        await routerOne.connect(addr2).swapExactTokensForETH(
-            addr2AfterDai,
-            10000,
-            [
-                dai.address,
-                weth.address
-            ],
-            addr2.address,
-            new Date().getTime() + 3600
+        assert(balanceAfter.gt(balanceBefore));
+
+    })
+
+    it("Trader made some profit using his own token", async () => {
+
+        await routerOne.connect(addr1).addLiquidity(
+            dai.address,
+            usdt.address,
+            Dai(9000),
+            USDT(10000),
+            Dai(9000),
+            USDT(10000),
+            addr1.address,
+            new Date().getTime() + 3600,
         )
 
-        const addr2FinalDai = await dai.connect(addr2).balanceOf(addr2.address);
-        const addr2FinalEth = await addr2.getBalance();
+        await routerTwo.connect(addr1).addLiquidity(
+            dai.address,
+            usdt.address,
+            Dai(10000),
+            USDT(9000),
+            Dai(10000),
+            USDT(9000),
+            addr1.address,
+            new Date().getTime() + 3600,
+        )
 
-        console.log("Final DAI balance : ", printDai(addr2FinalDai));
-        console.log("Final ETH balance : ", printEth(addr2FinalEth));
+        const daiUsdtPairOne = await getPair(await uniswapFactoryOne.getPair(dai.address, usdt.address));
+        const daiUsdtPairTwo = await getPair(await uniswapFactoryTwo.getPair(dai.address, usdt.address));
 
-        console.log(`Profit : ${formatEther(addr2FinalEth.sub(addr2BeforeEth))}`)
-        await printPricesOfPair(daiWethPairOne, daiWethPairTwo);
-        console.log("done");
+        const oportunities: ArbitrageOpportunity[] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
+            [
+                daiUsdtPairOne.address,
+                daiUsdtPairTwo.address,
+            ], weth.address);
+
+
+        const usdtBalanceBefore = await usdt.balanceOf(addr2.address);
+        console.log("usdt before : ", usdtBalanceBefore)
+
+        await executeTradesViaRouter(ethers.provider, weth.address, getRouter, addr2, oportunities)
+
+        const usdtBalanceAfter = await usdt.balanceOf(addr2.address);
+
+
+        console.log("Finished trading at : ", printEth(usdtBalanceBefore));
+
+        const profit = usdtBalanceAfter.sub(usdtBalanceBefore);
+
+        assert(profit.gt(BigNumber.from(0)));
+
     })
 
 });
