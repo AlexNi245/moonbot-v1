@@ -44,5 +44,6 @@ export interface ArbitrageOpportunity {
     amountIn: BigNumber;
     direction: boolean;
     factories: [string, string];
+    pairs: [string, string];
 
 }

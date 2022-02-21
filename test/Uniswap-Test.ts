@@ -92,7 +92,7 @@ describe("Uniswaptest", function () {
 
 
 
-    it.skip("Trader made some profit using his own eth", async () => {
+    it("Trader made some profit using his own eth", async () => {
         await routerOne.connect(addr1).addLiquidityETH(
             dai.address,
             Dai(10000),
@@ -140,7 +140,7 @@ describe("Uniswaptest", function () {
 
         await executeTradesViaRouter(ethers.provider, weth.address, getRouter, addr2, oportunities)
 
-
+ 
         const balanceAfter = await addr2.getBalance();
         console.log("Finished trading at : ", printEth(balanceAfter));
 
@@ -202,7 +202,16 @@ describe("Uniswaptest", function () {
         assert(profit.gt(BigNumber.from(0)));
 
     })
+    before(async () => {
+        const deployNewUniswapV2Query = async () => {
+            const f = await ethers.getContractFactory("UniswapV2Query");
+            const addr = await f.deploy()
+            console.log("new contract deployed at : ", addr.address);
+        }
 
+
+        //   await deployNewUniswapV2Query()
+    })
 });
 
 

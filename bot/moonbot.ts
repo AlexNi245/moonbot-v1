@@ -6,11 +6,6 @@ import { fetchBalanceFromUniswap } from "./uniswap/query";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { formatEther, parseEther } from "ethers/lib/utils";
 
-
-
-
-
-
 export const evaluteProfitInPools = async (provider: StaticJsonRpcProvider, uniswapV2QueryAddress: string, pools: string[], target: string): Promise<ArbitrageOpportunity[]> => {
 
     const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(p => getTokenAddresses(provider, p)));
@@ -39,10 +34,11 @@ export const evaluteProfitInPools = async (provider: StaticJsonRpcProvider, unis
                 const [amountIn, direction] = calcProfitMaximizingTrade(pool0ReserveA, pool0ReserveB, pool1ReserveA, pool1ReserveB);
 
                 const path: [string, string] = direction ? [outer.token0, outer.token1] : [outer.token1, outer.token0];
-                const factory: [string, string] = [inner.factory, outer.factory] 
+                const factory: [string, string] = [inner.factory, outer.factory]
+                const pairs: [string, string] = [inner.address, outer.address];
 
                 if (amountIn.gt(0)) {
-                    res.push({ token0: outer.token0, token1: outer.token1, amountIn, path, direction, factories: factory })
+                    res.push({ token0: outer.token0, token1: outer.token1, amountIn, path, direction, factories: factory, pairs })
                 }
             })
         })

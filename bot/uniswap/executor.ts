@@ -12,7 +12,7 @@ export const executeTradesViaRouter = async (provider: StaticJsonRpcProvider, we
 
     const buyOportunities = opportunities.filter(o => o.direction)
 
-    for (const order of buyOportunities) {
+        for (const order of buyOportunities) {
         const curretnB = await trader.getBalance();
 
 
