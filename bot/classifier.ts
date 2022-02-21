@@ -2,7 +2,7 @@ import { ethers, Transaction } from "ethers";
 import { getPairFromFactory } from "./uniswap/factory";
 import { evaluteProfitInPools } from "./moonbot";
 
-import {printEth} from ".././utils/ERC20Utils"
+import { printEth } from ".././utils/ERC20Utils"
 import { printArbitrageOpportunities } from "../utils/PrintUtils";
 //Wglmr
 const TARGET = "0xacc15dc74880c9944775448304b263d191c6077f";
@@ -35,7 +35,6 @@ export const classifier = () => {
         console.log("New Block ", blocknumber)
         transactions.forEach(({ to, data, blockNumber }) => {
             if (ROUTER.includes(to!)) {
-
                 evaluateTransaction(data)
             }
         })
@@ -55,8 +54,8 @@ const evaluateTransaction = async (data: string) => {
 
     console.log("the following pools are affected : ", affectedPools);
     if (affectedPools.length > 0) {
-       const profit = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
-    console.log(profit.map(printArbitrageOpportunities));
+        const profit = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+        console.log(profit.map(printArbitrageOpportunities));
     }
     console.log("Evaluation took : ", new Date().getTime() - start.getTime())
 }

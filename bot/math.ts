@@ -13,7 +13,7 @@ export function sqrt(x: BigNumber) {
     return y;
 }
 
-export const ETHER = BigNumber.from(10).pow(18);
+export const ETHER = BigNumber.from(1).pow(18);
 
 export const calcProfitMaximizingTrade = (
     pool0ReserveA: BigNumber,

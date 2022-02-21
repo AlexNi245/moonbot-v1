@@ -19,11 +19,19 @@ contract Executor is IUniswapV2Callee {
         WETH = _WETH;
     }
 
-    function swap(
-        uint256 amountIn,
-        address token,
-        address[2] memory pairs
-    ) public {
+    modifier isProfitable() {
+        uint256 balanceStart = IERC20(WETH).balanceOf(address(this));
+        console.log("Start balance : ", balanceStart);
+        _;
+        uint256 finalBalance = IERC20(WETH).balanceOf(address(this));
+        console.log("End balance : ", balanceStart);
+        require(finalBalance - balanceStart > 0, "Profit must be made");
+    }
+
+    function trade(uint256 amountIn, address[2] memory pairs)
+        public
+        isProfitable
+    {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(pairs[0]);
         IUniswapV2Pair sellToPair = IUniswapV2Pair(pairs[1]);
 
@@ -93,6 +101,7 @@ contract Executor is IUniswapV2Callee {
         IERC20(WETH).transfer(poolWhichNeedsToBePayed, lonedAmount);
 
         uint256 finalBalance = IERC20(WETH).balanceOf(address(this));
+
         console.log("final balance", finalBalance);
     }
 

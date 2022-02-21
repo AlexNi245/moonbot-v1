@@ -8,6 +8,8 @@ import { Dai, Eth, printEth, USDT } from "./../utils/ERC20Utils";
 import { mockToken, mockWeth } from "./utils/Erc20Utils";
 import { mockExecutor, mockUniswapV2Query } from "./utils/MoonbotUtils";
 import { getPair, setUpFactory, setUpRouter } from "./utils/UniswapUtils";
+import { tryExecution } from "../bot/uniswap/executor/onChainExecutor";
+import { assert } from "console";
 
 describe.only("FlashswapTest", () => {
     let dai: IERC20;
@@ -126,30 +128,49 @@ describe.only("FlashswapTest", () => {
 
 
     });
-    it("Test1", async () => {
-        const ammountIn = Eth(0.123);
-        await dai.connect(addr1).approve(executor.address, Dai(10000));
-        const p0t0 = await wethDaiPairOne.token0()
-        const p0t1 = await wethDaiPairOne.token1()
-        const p1t0 = await wethDaiPairTwo.token0()
-        const p1t1 = await wethDaiPairTwo.token1()
-
-        console.log(`Pair One : ${wethDaiPairOne.address} Token 0 : ${p0t0} Token 1 : ${p0t1}`);
-        console.log(`Pair Two : ${wethDaiPairTwo.address} Token 0 : ${p1t0} Token 1 : ${p1t1}`);
-
-
-        const [opportunity]: ArbitrageOpportunity[] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
+    it("Arbitrage Using Flashswap happy path 2 pools", async () => {
+        const before = await weth.balanceOf(executor.address);
+        const oportunities: ArbitrageOpportunity[] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
             [
                 wethDaiPairOne.address,
                 wethDaiPairTwo.address,
 
             ], weth.address);
 
+        console.log(oportunities)
 
-        console.log(opportunity);
+        await tryExecution(ethers.provider, addr2, executor.address, oportunities);
+        const after = await weth.balanceOf(executor.address);
 
-        console.log(`Buy ${printEth(opportunity.amountIn)} ETH`);
 
-        await executor.swap(opportunity.amountIn, opportunity.token1, opportunity.pairs);
+
+        const profit = after.sub(before);
+        console.log(`Trader made ${printEth(profit)} profit `);
+        assert(profit.gt(BigNumber.from(0)));
+
+    })
+
+    it("Arbitrage Using Flashswap happy path 3 pools", async () => {
+        const before = await weth.balanceOf(executor.address);
+        const oportunities: ArbitrageOpportunity[] = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address,
+            [
+                wethDaiPairOne.address,
+                wethDaiPairTwo.address,
+                wethDaiPairThree.address,
+
+            ], weth.address);
+
+        console.log(oportunities)
+
+        await tryExecution(ethers.provider, addr2, executor.address, oportunities);
+        const after = await weth.balanceOf(executor.address);
+
+
+
+        const profit = after.sub(before);
+        console.log(`Trader made ${printEth(profit)} profit `);
+        assert(profit.gt(BigNumber.from(0)));
+
+
     })
 })

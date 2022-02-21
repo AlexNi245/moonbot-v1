@@ -2,9 +2,9 @@ import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract } from "ethers";
 import { ERC20, UniswapV2Router02 } from "typechain";
-import { ArbitrageOpportunity, Path } from "./../interfaces";
+import { ArbitrageOpportunity, Path } from "../../interfaces";
 import { abi as ERC20_ABI } from "@uniswap/v2-core/build/ERC20.json";
-import { printDai, printEth } from "./../../utils/ERC20Utils";
+import { printDai, printEth } from "../../../utils/ERC20Utils";
 
 export const executeTradesViaRouter = async (provider: StaticJsonRpcProvider, weth: string, getRouter: getRouter, trader: SignerWithAddress, opportunities: ArbitrageOpportunity[]) => {
 
@@ -12,7 +12,7 @@ export const executeTradesViaRouter = async (provider: StaticJsonRpcProvider, we
 
     const buyOportunities = opportunities.filter(o => o.direction)
 
-        for (const order of buyOportunities) {
+    for (const order of buyOportunities) {
         const curretnB = await trader.getBalance();
 
 
@@ -33,8 +33,6 @@ export const executeTradesViaRouter = async (provider: StaticJsonRpcProvider, we
             const [buyFactory, sellFactory] = factories;
         }
     }
-
-
 }
 
 const swapWethForToken = async (provider: StaticJsonRpcProvider, getRouter: getRouter, trader: SignerWithAddress, amountIn: BigNumber, path: Path, factory: string) => {
@@ -58,7 +56,7 @@ const swapTokenForWeth = async (provider: StaticJsonRpcProvider, getRouter: getR
     const router = getRouter(factory);
     const token = new Contract(path[0], ERC20_ABI, provider)
     await token.connect(trader).approve(router.address, amountIn);
-
+  
     const before = await trader.getBalance();
 
     await router.connect(trader).swapExactTokensForETH(
