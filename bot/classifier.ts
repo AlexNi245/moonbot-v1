@@ -1,20 +1,23 @@
-import { ethers, Transaction } from "ethers";
-import { getPairFromFactory } from "./uniswap/factory";
-import { evaluteProfitInPools } from "./moonbot";
-
-import { printEth } from ".././utils/ERC20Utils"
+import { ethers, Wallet } from "ethers";
 import { printArbitrageOpportunities } from "../utils/PrintUtils";
+import { tryExecution } from "./../bot/uniswap/executor/onChainExecutor";
+import { evaluteProfitInPools } from "./moonbot";
+import { getPairFromFactory } from "./uniswap/factory";
+
 //Wglmr
 const TARGET = "0xacc15dc74880c9944775448304b263d191c6077f";
 //
 const QUERY_ADDRESS = "0xF66face6D10eEF9a9624F255D3931e9a1715F933";
 
+const EXECUTOR_ADDRESS = "0x64b7C08340D368c574B8865485C8c517A1018D58";
 
 const ROUTER = [
     //Flaire Router
     "0xd3b02ff30c218c7f7756ba14bca075bf7c2c951e",
     //BeamSwapRouter
-    "0x96b244391D98B62D19aE89b1A4dCcf0fc56970C7"
+    "0x96b244391D98B62D19aE89b1A4dCcf0fc56970C7",
+    //StellaSwap
+    "0xd0A01ec574D1fC6652eDF79cb2F880fd47D34Ab1"
 ]
 
 const MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
@@ -22,7 +25,14 @@ const MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rp
     name: 'moonbeam'
 });
 
-export const classifier = () => {
+
+
+
+const SIGNER = new Wallet("0xbf919b7161676e72f22662fc352ae667f9fc418bd0ccc14f75386fb23904f739", MOONBEAM_PROVIDER);
+
+export const classifier = async () => {
+
+    // throw"";
 
     const provider = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
         chainId: 1284,
@@ -52,9 +62,13 @@ const evaluateTransaction = async (data: string) => {
 
     const affectedPools = await getAllAllAffectedPairs(decodedPoolAddresses);
 
+
+
     console.log("the following pools are affected : ", affectedPools);
     if (affectedPools.length > 0) {
         const profit = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+
+        tryExecution(MOONBEAM_PROVIDER, SIGNER, EXECUTOR_ADDRESS, profit)
         console.log(profit.map(printArbitrageOpportunities));
     }
     console.log("Evaluation took : ", new Date().getTime() - start.getTime())

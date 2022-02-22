@@ -1,26 +1,66 @@
-docker run --network="host" \
--v "/mnt/disks/ssd" \
--u (id -u niko2424 ):(id -g niko2424 ) \
+docker run -p 9933:9933 -p 9944:9944 --network="host"  -v "/media/ssd1/moonbeam:/data" \
+-u $(id -u ${USER}):$(id -g ${USER}) \
 purestake/moonbeam-tracing:v0.20.1-1201-5590 \
 --base-path=/data \
 --chain moonbeam \
 --name="Moonbeam-Tutorial" \
 --pruning archive \
 --state-cache-size 1 \
---db-cache 16000 \
+--db-cache 8000 \
 --ethapi=debug,trace,txpool \
 --wasm-runtime-overrides=/moonbeam/moonbeam-substitutes-tracing \
 --runtime-cache-size 32 \
+--execution wasm \
+--unsafe-rpc-external \
+--unsafe-ws-external \
 -- \
 --execution wasm \
 --pruning archive \
 --name="Moonbeam-Tutorial (Embedded Relay)" \
---unsafe-ws-external \
---unsafe-rpc-external 
+
+
+curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
+  '{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"debug_traceTransaction",
+    "params": ["0xbdeb3f11d411d09995ac9b3d790ee46cadc435e4e5c266d50a80339bd679f7b3"]
+  }'
+
+  curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
+  '{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"trace_filter", "params":[{"fromBlock":"0x70714","toBlock":"0x702F6","toAddress":["0x64b7c08340d368c574b8865485c8c517a1018d58"],"after":0,"count":20}]
+  }'
+
+  
+  curl http://95.223.229.166:9933 -H "Content-Type:application/json;charset=utf-8" -d \
+  '{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"trace_filter", "params":[{"fromBlock":"0x70714","toBlock":"0x702F6","toAddress":["0x64b7c08340d368c574b8865485c8c517a1018d58"],"after":0,"count":20}]
+  }'
+
+curl http://192.168.0.172:9933 --request POST --header "Content-Type: application/json" --data '{ "jsonrpc":"2.0", "method":"eth_blockNumber","params":[],"id":1}'
 
 
 
-0xaCd79A6288363220769551bbAD2cEEA4Af0a954F
-0xb5b2444eDF79b00d40f463f79158D1187a0D0c25
+  curl http://127.0.0.1:9933  -H "Content-Type:application/json;charset=utf-8" -d \
+  '{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"trace_filter", "params":[{txHash:0x40aa14a722511c07c589ee8ff08df5b429bbb180238cc94742ef57a23ea09bb1}]
+  }'
 
-docker pull purestake/moonbeam-tracing:v0.20.1-1201-latest
+curl http://127.0.0.1:9933 --request POST --header "Content-Type: application/json" --data {"method": "debug_traceTransaction", "params": [txHash, {\
+  0x40aa14a722511c07c589ee8ff08df5b429bbb180238cc94742ef57a23ea09bb1
+}]}
+
+curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
+  '{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"debug_traceTransaction",
+    "params": ["0xcca2b9b966d78685fc22bb52b6e0928c3580b7e8fd853e1511aaf6373848510e",{"tracer":"callTracer", "timeout":"1000s"}]
+  }'

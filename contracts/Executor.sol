@@ -1,6 +1,5 @@
 pragma solidity ^0.6.6;
 
-import "hardhat/console.sol";
 import "./V2/core/interfaces/IUniswapV2Callee.sol";
 import "./V2/periphery/libraries/UniswapV2Library.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
@@ -13,19 +12,24 @@ import "./V2/periphery/libraries/SafeMath.sol";
 
 contract Executor is IUniswapV2Callee {
     using SafeMath for uint256;
-    address private WETH;
+    address private immutable WETH;
+    address private immutable OWNER;
 
-    constructor(address _WETH) public {
+    constructor(address _WETH, address _owner) public {
         WETH = _WETH;
+        OWNER = _owner;
     }
+
+    event onFinish(uint256 balanceStart, uint256 finalBalance);
 
     modifier isProfitable() {
         uint256 balanceStart = IERC20(WETH).balanceOf(address(this));
-        console.log("Start balance : ", balanceStart);
         _;
         uint256 finalBalance = IERC20(WETH).balanceOf(address(this));
-        console.log("End balance : ", balanceStart);
+
+        emit onFinish(balanceStart, finalBalance);
         require(finalBalance - balanceStart > 0, "Profit must be made");
+        IERC20(WETH).transfer(OWNER, finalBalance);
     }
 
     function trade(uint256 amountIn, address[2] memory pairs)
@@ -33,9 +37,6 @@ contract Executor is IUniswapV2Callee {
         isProfitable
     {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(pairs[0]);
-        IUniswapV2Pair sellToPair = IUniswapV2Pair(pairs[1]);
-
-        require(buyFromPair.token0() == WETH, "token0 must be WETH!");
 
         bytes memory data = abi.encode(
             //Pair where to sell tokens for weth
@@ -43,7 +44,7 @@ contract Executor is IUniswapV2Callee {
             //The token which the eth is traded for
             buyFromPair.token1(),
             //Amount that need to be payed back
-            _calcToRepay(pairs[0], amountIn),
+            _calcRepayAmount(amountIn),
             //Pool which needs to be paid
             pairs[0]
         );
@@ -72,21 +73,12 @@ contract Executor is IUniswapV2Callee {
 
         uint256 spendableBalance = IERC20(_target).balanceOf(address(this));
 
-        console.log("Amount 0 : ", amount0);
-        console.log("Amount 1 : ", amount1);
-
-        console.log("What to spend ", _target);
-        console.log("Spendable Balance  : ", spendableBalance);
-
         IERC20(_target).transfer(sellToPairAddress, spendableBalance);
 
         (uint256 amount0Out, uint256 amount1Out) = _calcEthForTokens(
             sellToPairAddress,
             spendableBalance
         );
-
-        console.log("Sell amount0Out ", amount0Out);
-        console.log("Sell amount1Out ", amount1Out);
 
         IUniswapV2Pair(sellToPairAddress).swap(
             amount0Out,
@@ -95,19 +87,13 @@ contract Executor is IUniswapV2Callee {
             new bytes(0)
         );
 
-        uint256 balanceAfter = IERC20(WETH).balanceOf(address(this));
-
-        console.log("balance after", balanceAfter);
         IERC20(WETH).transfer(poolWhichNeedsToBePayed, lonedAmount);
-
-        uint256 finalBalance = IERC20(WETH).balanceOf(address(this));
-
-        console.log("final balance", finalBalance);
     }
 
     //At the beginning we need to calc the amount of tokens we can get given the eth input
     function _calcTokenForEth(address _buyFromPair, uint256 amountIn)
-        private
+        internal
+        view
         returns (uint256 amount0Out, uint256 amount1Out)
     {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(_buyFromPair);
@@ -120,20 +106,19 @@ contract Executor is IUniswapV2Callee {
             ? 0
             : UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
 
-        console.log("Buy amount0Out ", amount0Out);
-        console.log("Buy amount1Out ", amount1Out);
         return (amount0Out, amount1Out);
     }
 
     //We need to calc the eth amount we can receive for or tokens from step 1
     function _calcEthForTokens(address _sellToPair, uint256 spendableBalance)
-        private
+        internal
+        view
         returns (uint256 amount0Out, uint256 amount1Out)
     {
         IUniswapV2Pair sellToPair = IUniswapV2Pair(_sellToPair);
         (uint256 reserve0, uint256 reserve1, ) = sellToPair.getReserves();
 
-        uint256 amount0Out = sellToPair.token0() == WETH
+        amount0Out = sellToPair.token0() == WETH
             ? UniswapV2Library.getAmountOut(
                 spendableBalance,
                 reserve1,
@@ -141,7 +126,7 @@ contract Executor is IUniswapV2Callee {
             )
             : 0;
 
-        uint256 amount1Out = sellToPair.token1() == WETH
+        amount1Out = sellToPair.token1() == WETH
             ? UniswapV2Library.getAmountOut(
                 spendableBalance,
                 reserve0,
@@ -151,20 +136,12 @@ contract Executor is IUniswapV2Callee {
         return (amount0Out, amount1Out);
     }
 
-    function _calcToRepay(address _buyPoolAddress, uint256 owedAmount)
-        private
+    function _calcRepayAmount(uint256 owedAmount)
+        internal
+        pure
         returns (uint256)
     {
         uint256 fee = ((owedAmount * 3) / 997) + 1;
-        uint256 repay = owedAmount + fee;
-        console.log("ETH input", owedAmount);
-        console.log("Repay Loan", repay);
-        return repay;
+        return owedAmount + fee;
     }
 }
-//123000000000000000 //input
-//1226294961822253 // balance after
-//123370110330992979 // with fess
-//1226294961822253
-
-//123000000000000000 //spendable balance

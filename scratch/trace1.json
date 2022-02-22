@@ -1,0 +1,75 @@
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "calls": [
+            //isProfitable
+            {
+                "from": "0x64b7c08340d368c574b8865485c8c517a1018d58", //Contract
+                "gas": "0x41661",
+                "gasUsed": "0x1aaa",
+                //Balance of contract
+                "input": "0x70a0823100000000000000000000000064b7c08340d368c574b8865485c8c517a1018d58",
+                "output": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "to": "0xacc15dc74880c9944775448304b263d191c6077f", //Weth
+                "type": "STATICCALL",
+                "value": "0x0"
+            },
+            {
+                "from": "0x64b7c08340d368c574b8865485c8c517a1018d58",
+                "gas": "0x401b4",
+                "gasUsed": "0x19d3",
+                "input": "0x0dfe1681",
+                "output": "0x000000000000000000000000765277eebeca2e31912c9946eae1021199b39c61",
+                "to": "0x676316597e8afa2f73498350dde59cdb9fcc1ba1", //Pair DAI/WETH
+                "type": "STATICCALL",
+                "value": "0x0"
+            }
+        ],
+        "error": "execution reverted",
+        "from": "0x5e6ab24fc08d53a4ed77aa1a61d08fdb519c080f",
+        "gas": "0x4112c",
+        "gasUsed": "0x82b4",
+        "input": "0x61370ef6000000000000000000000000000000000000000000b1d7dca41a41cd2227add5000000000000000000000000676316597e8afa2f73498350dde59cdb9fcc1ba10000000000000000000000007ef9491774a81f6db7bb759fe2f645c334dcf5b1",
+        "to": "0x64b7c08340d368c574b8865485c8c517a1018d58",
+        "type": "CALL",
+        "value": "0x0"
+    },
+    "id": 1
+}
+//0xcca2b9b966d78685fc22bb52b6e0928c3580b7e8fd853e1511aaf6373848510e
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "calls": [
+            {
+                "from": "0x64b7c08340d368c574b8865485c8c517a1018d58",
+                "gas": "0x41679",
+                "gasUsed": "0x1aaa",
+                "input": "0x70a0823100000000000000000000000064b7c08340d368c574b8865485c8c517a1018d58",
+                "output": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "to": "0xacc15dc74880c9944775448304b263d191c6077f",
+                "type": "STATICCALL",
+                "value": "0x0"
+            },
+            {
+                "from": "0x64b7c08340d368c574b8865485c8c517a1018d58",
+                "gas": "0x401cc",
+                "gasUsed": "0x19d3",
+                "input": "0x0dfe1681",
+                "output": "0x000000000000000000000000a649325aa7c5093d12d6f98eb4378deae68ce23f",
+                "to": "0xfc422eb0a2c7a99bad330377497fd9798c9b1001",
+                "type": "STATICCALL",
+                "value": "0x0"
+            }
+        ],
+        "error": "execution reverted",
+        "from": "0x5e6ab24fc08d53a4ed77aa1a61d08fdb519c080f",
+        "gas": "0x41144",
+        "gasUsed": "0x829c",
+        "input": "0x61370ef600000000000000000000000000000000000000000000003e2cacb8212a4cf151000000000000000000000000fc422eb0a2c7a99bad330377497fd9798c9b10010000000000000000000000000108b25313645d6cefb5d66b420b10b204cd378b",
+        "to": "0x64b7c08340d368c574b8865485c8c517a1018d58",
+        "type": "CALL",
+        "value": "0x0"
+    },
+    "id": 1
+}
