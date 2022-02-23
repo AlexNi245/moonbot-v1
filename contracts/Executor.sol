@@ -6,6 +6,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "./V2/core/interfaces/IERC20.sol";
 import "./V2/periphery/libraries/SafeMath.sol";
+import "hardhat/console.sol";
 
 //1. swapExactETHForTokens
 //2. swapExactTokensForETH
@@ -40,13 +41,15 @@ contract Executor is IUniswapV2Callee {
         uint256 blockNumber
     ) public isProfitable {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(pairs[0]);
+        address buyFromPairToken0 = buyFromPair.token0();
+        address buyFromPairToken1 = buyFromPair.token1();
 
         bytes memory data = abi.encode(
             //Pair where to sell tokens for weth
             pairs[1],
             //The token which the eth is traded for
             //Call  #2
-            buyFromPair.token1(),
+            buyFromPairToken0 == WETH ? buyFromPairToken1 : buyFromPairToken0,
             //Amount that need to be payed back
             _calcRepayAmount(amountIn),
             //Pool which needs to be paid
@@ -79,6 +82,8 @@ contract Executor is IUniswapV2Callee {
 
         IERC20(_target).transfer(sellToPairAddress, spendableBalance);
 
+        console.log("tokenBefore", spendableBalance);
+
         (uint256 amount0Out, uint256 amount1Out) = _calcEthForTokens(
             sellToPairAddress,
             spendableBalance
@@ -90,6 +95,12 @@ contract Executor is IUniswapV2Callee {
             address(this),
             new bytes(0)
         );
+
+        uint256 wethB = IERC20(WETH).balanceOf(address(this));
+        uint256 tokenAfter = IERC20(_target).balanceOf(address(this));
+
+        console.log("WETH B", wethB);
+        console.log("loned Amount ", lonedAmount);
 
         IERC20(WETH).transfer(poolWhichNeedsToBePayed, lonedAmount);
     }
@@ -103,16 +114,16 @@ contract Executor is IUniswapV2Callee {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(_buyFromPair);
 
         //Call#3
-        (uint256 reserveIn, uint256 reserveOut, ) = buyFromPair.getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = buyFromPair.getReserves();
 
         //Call#4
         amount0Out = buyFromPair.token0() == WETH
             ? 0
-            : UniswapV2Library.getAmountOut(amountIn, reserveOut, reserveIn);
+            : UniswapV2Library.getAmountOut(amountIn, reserve1, reserve0);
         //Call#5
         amount1Out = buyFromPair.token1() == WETH
             ? 0
-            : UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+            : UniswapV2Library.getAmountOut(amountIn, reserve0, reserve1);
 
         return (amount0Out, amount1Out);
     }
@@ -127,22 +138,24 @@ contract Executor is IUniswapV2Callee {
         (uint256 reserve0, uint256 reserve1, ) = sellToPair.getReserves();
 
         amount0Out = sellToPair.token0() == WETH
-            ? 0
-            : UniswapV2Library.getAmountOut(
-                spendableBalance,
-                reserve0,
-                reserve1
-            );
-
-        amount1Out = sellToPair.token1() == WETH
-            ? 0
-            : UniswapV2Library.getAmountOut(
+            ? UniswapV2Library.getAmountOut(
                 spendableBalance,
                 reserve1,
                 reserve0
-            );
+            )
+            : 0;
+
+        amount1Out = sellToPair.token1() == WETH
+            ? UniswapV2Library.getAmountOut(
+                spendableBalance,
+                reserve0,
+                reserve1
+            )
+            : 0;
         return (amount0Out, amount1Out);
     }
+
+    
 
     function _calcRepayAmount(uint256 owedAmount)
         internal
