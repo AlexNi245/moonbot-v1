@@ -129,14 +129,14 @@ describe.only("Executor test", () => {
     });
 
 
-    it("_calcAmountToSwap works properly if token 0 == WETH", async () => {
+    it("_calcTokenForEthh works properly if token 0 == WETH", async () => {
         const buyFromPair = wethDaiPairOne;
         const token0 = await buyFromPair.token0();
 
         assert(token0 === weth.address, "Token 0 must be weth");
 
         const amountIn = BigNumber.from("10000");
-        const [actualAmount0Out, actualAmount1Out] = await executor._calcAmountToSwap(buyFromPair.address, amountIn)
+        const [actualAmount0Out, actualAmount1Out] = await executor._calcTokenForEth(buyFromPair.address, amountIn)
 
 
 
@@ -149,21 +149,19 @@ describe.only("Executor test", () => {
 
     })
 
-    it("_calcAmountToSwap works properly if token 1 == WETH", async () => {
+    it("_calcTokenForEth works properly if token 1 == WETH", async () => {
         const buyFromPair = wethDaiPairTwo;
         const token1 = await buyFromPair.token1();
 
         assert(token1 === weth.address, "Token 1 must be weth");
 
         const amountIn = BigNumber.from("10000");
-        const [actualAmount0Out, actualAmount1Out] = await executor._calcAmountToSwap(buyFromPair.address, amountIn)
+        const [actualAmount0Out, actualAmount1Out] = await executor._calcTokenForEth(buyFromPair.address, amountIn)
 
 
-
-        const expectedAmount0 = BigNumber.from(4984999);
+        const expectedAmount0 = BigNumber.from(996999);
         const expectedAmount1 = BigNumber.from(0);
-        console.log("Expect amount0ToBe ", expectedAmount0.eq(actualAmount0Out))
-        console.log("Expect amount1ToBe ", expectedAmount1.eq(actualAmount1Out))
+
 
         assert(expectedAmount0.eq(actualAmount0Out), `Expect amount0ToBe ${expectedAmount0} is ${actualAmount0Out}`)
         assert(expectedAmount1.eq(actualAmount1Out), `Expect amount0ToBe ${expectedAmount1} is ${actualAmount1Out}`)
@@ -171,9 +169,47 @@ describe.only("Executor test", () => {
 
     })
 
+    it("_calcEthForTokens properly if token 0 == WETH", async () => {
+        const sellToPair = wethDaiPairOne;
+        const token0 = await sellToPair.token0();
+
+        assert(token0 === weth.address, "Token 0 must be weth");
+        //The amount of token which we want to swap for ether
+        const amountIn = BigNumber.from("1000000");
+        const [actualAmount0Out, actualAmount1Out] = await executor._calcEthForTokens(sellToPair.address, amountIn)
+
+        const expectedAmount0 = BigNumber.from(9969);
+        const expectedAmount1 = BigNumber.from(0);
+
+        assert(expectedAmount0.eq(actualAmount0Out), `Expect amount0ToBe ${expectedAmount0} is ${actualAmount0Out}`)
+        assert(expectedAmount1.eq(actualAmount1Out), `Expect amount1ToBe ${expectedAmount1} is ${actualAmount1Out}`)
 
 
-    it.only("swap happy path", async () => {
+    })
+
+    it("_calcEthForTokens works properly if token 1 == WETH", async () => {
+        const sellToPair = wethDaiPairTwo;
+        const token1 = await sellToPair.token1();
+
+        assert(token1 === weth.address, "Token 1 must be weth");
+
+        //The tokens i receive
+        const amountIn = BigNumber.from("1000000");
+        const [actualAmount0Out, actualAmount1Out] = await executor._calcEthForTokens(sellToPair.address, amountIn)
+
+
+        const expectedAmount0 = BigNumber.from(0);
+        const expectedAmount1 = BigNumber.from(9969);
+        console.log("Expect amount0ToBe ", expectedAmount0.eq(actualAmount0Out))
+        console.log("Expect amount1ToBe ", expectedAmount1.eq(actualAmount1Out))
+
+        assert(expectedAmount0.eq(actualAmount0Out), `Expect amount0ToBe ${expectedAmount0} is ${actualAmount0Out}`)
+        assert(expectedAmount1.eq(actualAmount1Out), `Expect amount0ToBe ${expectedAmount1} is ${actualAmount1Out}`)
+
+    })
+
+
+    it("swap happy path", async () => {
         const balanceBefore = await weth.balanceOf(addr2.address);
         const buyFromPair = wethDaiPairThree;
         const sellToPair = wethDaiPairOne;

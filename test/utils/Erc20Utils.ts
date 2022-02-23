@@ -15,7 +15,16 @@ export const mockWeth = async (): Promise<WETH9> => {
 
 export const mockToken = async (name: string): Promise<ERC20> => {
     const t = await hre.ethers.getContractFactory("contracts/ERC20/ERC20.sol:ERC20");
-    const token = await t.deploy(name,name) as ERC20;
+    const token = await t.deploy(name, name) as ERC20;
     console.log(`${name} @ ${token.address}`);
     return token;
+}
+
+export const findTokenSmallerThenWeth = async (weth: WETH9, name: string) => {
+    let token = await mockToken(name);
+    while (token.address.toLowerCase() >= weth.address.toLowerCase()) {
+        token = await mockToken(name);
+    }
+    return token as ERC20;
+
 }

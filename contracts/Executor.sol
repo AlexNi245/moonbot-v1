@@ -155,8 +155,6 @@ contract Executor is IUniswapV2Callee {
         return (amount0Out, amount1Out);
     }
 
-    
-
     function _calcRepayAmount(uint256 owedAmount)
         internal
         pure

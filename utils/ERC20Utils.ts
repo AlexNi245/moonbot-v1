@@ -1,7 +1,7 @@
 import { BigNumberish, ethers } from "ethers";
 
 export const Dai = (x: string | number) => ethers.utils.parseUnits(x.toString(), 18);
-export const USDT = (x: string | number) => ethers.utils.parseUnits(x.toString(), 6);
+export const USDT = (x: string | number) => ethers.utils.parseUnits(x.toString(), 18);
 export const Eth = (x: string | number) => ethers.utils.parseEther(x.toString());
 
 
