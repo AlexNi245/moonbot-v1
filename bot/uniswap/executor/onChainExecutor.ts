@@ -8,8 +8,8 @@ import { Executor } from "typechain";
 import { Eth, printEth } from "./../../../utils/ERC20Utils";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-export const tryExecution = async (provider: StaticJsonRpcProvider, signer: ethers.Signer, executorAdress: string, arbitrageOpportunity: ArbitrageOpportunity[]) => {
-    const t = arbitrageOpportunity.filter(transactionFilter).map(o => executeOnChain(provider, signer, executorAdress, o));
+export const tryExecution = async (provider: StaticJsonRpcProvider, signer: ethers.Signer, executorAdress: string, blockNumber: number, arbitrageOpportunity: ArbitrageOpportunity[]) => {
+    const t = arbitrageOpportunity.filter(transactionFilter).map(o => executeOnChain(provider, signer, executorAdress, o, blockNumber));
     const res = await Promise.allSettled(t);
 
     console.log(res);
@@ -17,11 +17,6 @@ export const tryExecution = async (provider: StaticJsonRpcProvider, signer: ethe
 
 
 const transactionFilter = (arbitrageOpportunity: ArbitrageOpportunity) => {
-    if (!arbitrageOpportunity.direction) {
-        console.log("Wrong direction");
-        return false;
-    }
-
     if (arbitrageOpportunity.amountIn.lt(Eth(1))) {
         console.log(printEth(arbitrageOpportunity.amountIn));
         console.log("Profit is to low");
@@ -31,9 +26,9 @@ const transactionFilter = (arbitrageOpportunity: ArbitrageOpportunity) => {
 
 }
 
-const executeOnChain = async (provider: StaticJsonRpcProvider, signer: ethers.Signer, executorAdress: string, arbitrageOpportunity: ArbitrageOpportunity) => {
+const executeOnChain = async (provider: StaticJsonRpcProvider, signer: ethers.Signer, executorAdress: string, arbitrageOpportunity: ArbitrageOpportunity, blockNumber: number) => {
     const executor = new Contract(executorAdress, EXECUTOR_ABI, signer) as Executor
-    return await executor.trade(arbitrageOpportunity.amountIn, arbitrageOpportunity.pairs, {
+    return await executor.trade(arbitrageOpportunity.amountIn, arbitrageOpportunity.pairs, blockNumber, {
         gasLimit: 300000
     });
 

@@ -9,7 +9,7 @@ const TARGET = "0xacc15dc74880c9944775448304b263d191c6077f";
 //
 const QUERY_ADDRESS = "0xF66face6D10eEF9a9624F255D3931e9a1715F933";
 
-const EXECUTOR_ADDRESS = "0xE872423f8De11C63E3B460Ed8199D33FcBCcA8dD";
+const EXECUTOR_ADDRESS = "0x79731200Cf650502c67d3a023b1890aE876239A8";
 
 const ROUTER = [
     //Flaire Router
@@ -45,7 +45,7 @@ export const classifier = async () => {
         console.log("New Block ", blocknumber)
         transactions.forEach(({ to, data, blockNumber }) => {
             if (ROUTER.includes(to!)) {
-                evaluateTransaction(data)
+                evaluateTransaction(data, blockNumber!)
             }
         })
     })
@@ -54,7 +54,7 @@ export const classifier = async () => {
 
 classifier()
 
-const evaluateTransaction = async (data: string) => {
+const evaluateTransaction = async (data: string, blockNumber: number) => {
     const start = new Date();
     console.log("Got Tranaction from router");
 
@@ -66,14 +66,15 @@ const evaluateTransaction = async (data: string) => {
 
     console.log("the following pools are affected : ", affectedPools);
     if (affectedPools.length > 0) {
-        const profit = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+        const allOpportunities = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+        const trade = allOpportunities[allOpportunities.length - 1];
 
-        tryExecution(MOONBEAM_PROVIDER, SIGNER, EXECUTOR_ADDRESS, profit)
-        console.log(profit.map(printArbitrageOpportunities));
+
+        tryExecution(MOONBEAM_PROVIDER, SIGNER, EXECUTOR_ADDRESS, blockNumber, [trade])
+        console.log(allOpportunities.map(printArbitrageOpportunities));
     }
     console.log("Evaluation took : ", new Date().getTime() - start.getTime())
 }
-
 
 
 

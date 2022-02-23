@@ -44,8 +44,17 @@ export const evaluteProfitInPools = async (provider: StaticJsonRpcProvider, unis
         })
 
     }
-    return res;
+    return orderByProfit(res.filter(orderFilter));
 
 }
 
 
+
+const orderFilter = (opportunity: ArbitrageOpportunity) => {
+    return opportunity.direction
+}
+
+const orderByProfit = (arbitrageOpportunity: ArbitrageOpportunity[]) => {
+   arbitrageOpportunity.sort((a, b) => a.amountIn > b.amountIn ? 0 : 1);
+   return arbitrageOpportunity;
+}

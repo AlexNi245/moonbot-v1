@@ -6,7 +6,6 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "./V2/core/interfaces/IERC20.sol";
 import "./V2/periphery/libraries/SafeMath.sol";
-import "hardhat/console.sol";
 
 //1. swapExactETHForTokens
 //2. swapExactTokensForETH
@@ -82,7 +81,6 @@ contract Executor is IUniswapV2Callee {
 
         IERC20(_target).transfer(sellToPairAddress, spendableBalance);
 
-        console.log("tokenBefore", spendableBalance);
 
         (uint256 amount0Out, uint256 amount1Out) = _calcEthForTokens(
             sellToPairAddress,
@@ -95,12 +93,6 @@ contract Executor is IUniswapV2Callee {
             address(this),
             new bytes(0)
         );
-
-        uint256 wethB = IERC20(WETH).balanceOf(address(this));
-        uint256 tokenAfter = IERC20(_target).balanceOf(address(this));
-
-        console.log("WETH B", wethB);
-        console.log("loned Amount ", lonedAmount);
 
         IERC20(WETH).transfer(poolWhichNeedsToBePayed, lonedAmount);
     }
@@ -128,7 +120,7 @@ contract Executor is IUniswapV2Callee {
         return (amount0Out, amount1Out);
     }
 
-    //We need to calc the eth amount we can receive for or tokens from step 1
+    //We need to calc the eth amount we can receive for or tokens from step 1tr
     function _calcEthForTokens(address _sellToPair, uint256 spendableBalance)
         public
         view

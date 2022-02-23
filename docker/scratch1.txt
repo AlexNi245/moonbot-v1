@@ -62,5 +62,5 @@ curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
     "jsonrpc":"2.0",
     "id":1,
     "method":"debug_traceTransaction",
-    "params": ["0xcca2b9b966d78685fc22bb52b6e0928c3580b7e8fd853e1511aaf6373848510e",{"tracer":"callTracer", "timeout":"1000s"}]
+    "params": ["0xcf35cbbfa13eb1a678fb97250ccc9b8a679ac37424bc47b3bbd9358592183032",{"tracer":"callTracer", "timeout":"1000s"}]
   }'

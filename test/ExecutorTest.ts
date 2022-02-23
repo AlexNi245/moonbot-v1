@@ -9,7 +9,7 @@ import { mockExecutor, mockUniswapV2Query } from "./utils/MoonbotUtils";
 import { getPair, setUpFactory, setUpRouter } from "./utils/UniswapUtils";
 import { calcProfitMaximizingTrade } from "./../bot/math";
 
-describe.only("Executor test", () => {
+describe("Executor test", () => {
     let dai: IERC20;
     let weth: WETH9;
     let usdt: IERC20;
