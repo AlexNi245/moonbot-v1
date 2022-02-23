@@ -23,6 +23,7 @@ contract Executor is IUniswapV2Callee {
     event onFinish(uint256 balanceStart, uint256 finalBalance);
 
     modifier isProfitable() {
+        //Call #1
         uint256 balanceStart = IERC20(WETH).balanceOf(address(this));
         _;
         uint256 finalBalance = IERC20(WETH).balanceOf(address(this));
@@ -32,16 +33,19 @@ contract Executor is IUniswapV2Callee {
         IERC20(WETH).transfer(OWNER, finalBalance);
     }
 
-    function trade(uint256 amountIn, address[2] memory pairs)
-        public
-        isProfitable
-    {
+    function trade(
+        uint256 amountIn,
+        address[2] memory pairs,
+        //For debuggin purposes -> block where the opportunity was found
+        uint256 blockNumber
+    ) public isProfitable {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(pairs[0]);
 
         bytes memory data = abi.encode(
             //Pair where to sell tokens for weth
             pairs[1],
             //The token which the eth is traded for
+            //Call  #2
             buyFromPair.token1(),
             //Amount that need to be payed back
             _calcRepayAmount(amountIn),
@@ -92,16 +96,20 @@ contract Executor is IUniswapV2Callee {
 
     //At the beginning we need to calc the amount of tokens we can get given the eth input
     function _calcTokenForEth(address _buyFromPair, uint256 amountIn)
-        internal
+        public
         view
         returns (uint256 amount0Out, uint256 amount1Out)
     {
         IUniswapV2Pair buyFromPair = IUniswapV2Pair(_buyFromPair);
+
+        //Call#3
         (uint256 reserveIn, uint256 reserveOut, ) = buyFromPair.getReserves();
 
+        //Call#4
         amount0Out = buyFromPair.token0() == WETH
             ? 0
             : UniswapV2Library.getAmountOut(amountIn, reserveOut, reserveIn);
+        //Call#5
         amount1Out = buyFromPair.token1() == WETH
             ? 0
             : UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
@@ -111,7 +119,7 @@ contract Executor is IUniswapV2Callee {
 
     //We need to calc the eth amount we can receive for or tokens from step 1
     function _calcEthForTokens(address _sellToPair, uint256 spendableBalance)
-        internal
+        public
         view
         returns (uint256 amount0Out, uint256 amount1Out)
     {
@@ -119,20 +127,20 @@ contract Executor is IUniswapV2Callee {
         (uint256 reserve0, uint256 reserve1, ) = sellToPair.getReserves();
 
         amount0Out = sellToPair.token0() == WETH
-            ? UniswapV2Library.getAmountOut(
-                spendableBalance,
-                reserve1,
-                reserve0
-            )
-            : 0;
-
-        amount1Out = sellToPair.token1() == WETH
-            ? UniswapV2Library.getAmountOut(
+            ? 0
+            : UniswapV2Library.getAmountOut(
                 spendableBalance,
                 reserve0,
                 reserve1
-            )
-            : 0;
+            );
+
+        amount1Out = sellToPair.token1() == WETH
+            ? 0
+            : UniswapV2Library.getAmountOut(
+                spendableBalance,
+                reserve1,
+                reserve0
+            );
         return (amount0Out, amount1Out);
     }
 
