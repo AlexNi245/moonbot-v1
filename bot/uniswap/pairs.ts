@@ -10,6 +10,7 @@ export const getTokenAddresses = async (provider: StaticJsonRpcProvider, address
     const c: Contract = new Contract(address, UNISWAP_POOL_ABI, provider);
     const t0 = c.token0();
     const t1 = c.token1();
+    const factory = c.fa
 
     const [token0, token1] = await Promise.all([t0, t1]);
 
