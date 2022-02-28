@@ -214,7 +214,7 @@ describe("FlashswapTest", () => {
 
     // })
 
-    it.only("Deploy Executor", async () => {
+    it("Deploy Executor", async () => {
         const deployExecutor = async () => {
             const WGLMR = "0xacc15dc74880c9944775448304b263d191c6077f";
             const OWNER = "0x5e6ab24fc08d53a4ed77aa1a61d08fdb519c080f";
@@ -224,6 +224,6 @@ describe("FlashswapTest", () => {
         }
 
 
-      await deployExecutor()
+      //await deployExecutor()
     })
 })
