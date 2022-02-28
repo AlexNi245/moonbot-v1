@@ -1,7 +1,7 @@
 import { ethers, Wallet } from "ethers";
 import { printArbitrageOpportunities } from "../utils/PrintUtils";
 import { tryExecution } from "./../bot/uniswap/executor/onChainExecutor";
-import { evaluteProfitInPools } from "./moonbot";
+import { searchV0 } from "./searcher/searcherV0";
 import { getPairFromFactory } from "./uniswap/factory";
 
 //Wglmr
@@ -20,10 +20,16 @@ const ROUTER = [
     "0xd0A01ec574D1fC6652eDF79cb2F880fd47D34Ab1"
 ]
 
-const MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
+// const MOONBEAM_PROVIDER = new ethers.providers.StaticJsonRpcProvider('http://192.168.0.172:9933', {
+//     chainId: 1284,
+//     name: 'moonbeam'
+// });
+
+const MOONBEAM_PROVIDER = new ethers.providers.WebSocketProvider('ws://192.168.0.172:9944', {
     chainId: 1284,
     name: 'moonbeam'
 });
+   
 
 
 
@@ -34,15 +40,12 @@ export const classifier = async () => {
 
     // throw"";
 
-    const provider = new ethers.providers.StaticJsonRpcProvider('https://rpc.api.moonbeam.network', {
-        chainId: 1284,
-        name: 'moonbeam'
-    });
 
-    provider.on("block", async (blocknumber) => {
-        const { transactions } = await provider.getBlockWithTransactions(blocknumber);
 
-        console.log("New Block ", blocknumber)
+    MOONBEAM_PROVIDER.on("block", async (blocknumber) => {
+        const { transactions } = await MOONBEAM_PROVIDER.getBlockWithTransactions(blocknumber);
+
+        console.log(blocknumber," @ ",new Date().toLocaleTimeString());
         transactions.forEach(({ to, data, blockNumber }) => {
             if (ROUTER.includes(to!)) {
                 evaluateTransaction(data, blockNumber!)
@@ -56,7 +59,6 @@ classifier()
 
 const evaluateTransaction = async (data: string, blockNumber: number) => {
     const start = new Date();
-    console.log("Got Tranaction from router");
 
     const decodedPoolAddresses = decodeRouterFunctions(data);
 
@@ -64,16 +66,16 @@ const evaluateTransaction = async (data: string, blockNumber: number) => {
 
 
 
-    console.log("the following pools are affected : ", affectedPools);
     if (affectedPools.length > 0) {
-        const allOpportunities = await evaluteProfitInPools(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
-        const trade = allOpportunities[allOpportunities.length - 1];
+        const allOpportunities = await searchV0(MOONBEAM_PROVIDER, QUERY_ADDRESS, affectedPools, TARGET);
+        if (allOpportunities.length > 0) {
+            const trade = allOpportunities[allOpportunities.length - 1];
 
 
-        tryExecution(MOONBEAM_PROVIDER, SIGNER, EXECUTOR_ADDRESS, blockNumber, [trade])
-        console.log(allOpportunities.map(printArbitrageOpportunities));
+            tryExecution(MOONBEAM_PROVIDER, SIGNER, EXECUTOR_ADDRESS, blockNumber, [trade])
+        }
+
     }
-    console.log("Evaluation took : ", new Date().getTime() - start.getTime())
 }
 
 

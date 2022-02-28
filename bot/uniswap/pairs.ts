@@ -1,5 +1,5 @@
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
-import { abi as UNISWAP_POOL_ABI } from "@uniswap/v2-core/build/IUniswapV2Pair.json";
+import { abi as UNISWAP_POOL_ABI } from "./../../abi/UniswapV2Pair.json";
 import { BigNumber, Contract, ethers } from "ethers";
 import { formatEther, Interface } from "ethers/lib/utils";
 import { V2PoolsGroupedByTokens, V2PoolWithPrices, V2PoolWithReserve, V2PoolWithToken } from "../interfaces";
@@ -91,7 +91,6 @@ export const groupByTokens = (pools: V2PoolWithReserve[], target: string): V2Poo
         const tokenAddress = token0.toLowerCase() === target.toLowerCase() ? token1.toLowerCase() : token0.toLowerCase();
 
         if (result[tokenAddress] === undefined) {
-            console.log("adding new unique address : ", tokenAddress);
             result[tokenAddress] = []
         }
         result[tokenAddress].push(p);
@@ -101,26 +100,26 @@ export const groupByTokens = (pools: V2PoolWithReserve[], target: string): V2Poo
     return result;
 }
 
-const getTransactions = async (provider: StaticJsonRpcProvider, address: string) => {
-    const iface = new Interface(UNISWAP_POOL_ABI);
+// const getTransactions = async (provider: StaticJsonRpcProvider, address: string) => {
+//     const iface = new Interface(UNISWAP_POOL_ABI);
 
-    const fromBlock = 388991
-    const toBlock = await provider.getBlockNumber();
+//     const fromBlock = 388991
+//     const toBlock = await provider.getBlockNumber();
 
-    const topics = [
-        ethers.utils.id("Swap(address,uint256,uint256,uint256,uint256,address)")
-    ]
+//     const topics = [
+//         ethers.utils.id("Swap(address,uint256,uint256,uint256,uint256,address)")
+//     ]
 
 
-    const logs = (await provider.getLogs({
-        fromBlock,
-        toBlock,
-        address: address,
-        topics
-    }))
+//     const logs = (await provider.getLogs({
+//         fromBlock,
+//         toBlock,
+//         address: address,
+//         topics
+//     }))
 
-    console.log(logs);
+//     console.log(logs);
 
-    return logs;
+//     return logs;
 
-}
+// }

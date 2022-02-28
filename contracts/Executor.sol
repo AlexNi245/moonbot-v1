@@ -2,8 +2,7 @@ pragma solidity ^0.6.6;
 
 import "./V2/core/interfaces/IUniswapV2Callee.sol";
 import "./V2/periphery/libraries/UniswapV2Library.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
+import "./V2/core/interfaces/IUniswapV2Pair.sol";
 import "./V2/core/interfaces/IERC20.sol";
 import "./V2/periphery/libraries/SafeMath.sol";
 
@@ -21,6 +20,7 @@ contract Executor is IUniswapV2Callee {
     }
 
     event onFinish(uint256 balanceStart, uint256 finalBalance);
+    event Debug();
 
     modifier isProfitable() {
         //Call #1

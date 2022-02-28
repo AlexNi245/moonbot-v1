@@ -1,4 +1,6 @@
-docker run -p 9933:9933 -p 9944:9944 --network="host"  -v "/media/ssd1/moonbeam:/data" \
+
+
+sudo mount /dev/sdb2 /media/ssd1 && sudo docker run -p 9933:9933 -p 9944:9944  --network="host"  -v "/media/ssd1/moonbeam:/data" \
 -u $(id -u ${USER}):$(id -g ${USER}) \
 purestake/moonbeam-tracing:v0.20.1-1201-5590 \
 --base-path=/data \
@@ -13,11 +15,11 @@ purestake/moonbeam-tracing:v0.20.1-1201-5590 \
 --execution wasm \
 --unsafe-rpc-external \
 --unsafe-ws-external \
+--rpc-cors=all \
 -- \
 --execution wasm \
 --pruning archive \
 --name="Moonbeam-Tutorial (Embedded Relay)" \
-
 
 curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
   '{
@@ -62,5 +64,9 @@ curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d \
     "jsonrpc":"2.0",
     "id":1,
     "method":"debug_traceTransaction",
-    "params": ["0xcf35cbbfa13eb1a678fb97250ccc9b8a679ac37424bc47b3bbd9358592183032",{"tracer":"callTracer", "timeout":"1000s"}]
+    "params": ["0xcf38e780a825409a76a1b12bd031322b1d3463a1d0e657659d8259163cec8657",{"tracer":"callTracer", "timeout":"1000s"}]
   }'
+
+
+  curl http://192.168.0.172:9933 -g --request POST --header "Content-Type: application/json" --data '{ "jsonrpc":"2.0", "method":"txpool_inspect","params":[],"id":1}'
+

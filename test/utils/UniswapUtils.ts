@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { abi as UNISWAP_FACTORY_ABI, evm } from "@uniswap/v2-core/build/UniswapV2Factory.json";
+import { abi as UNISWAP_FACTORY_ABI, evm } from "./../../abi/UniswapV2Factory.json";
 import { BigNumber } from "ethers";
 import hre from "hardhat";
 import { ERC20, UniswapV2Factory, UniswapV2Pair, UniswapV2Router02, WETH9 } from "typechain";

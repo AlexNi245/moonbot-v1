@@ -1,5 +1,5 @@
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
-import { BigNumber, Contract, ethers } from "ethers";
+import { BigNumber, Contract, ethers, Transaction } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { ArbitrageOpportunity } from "../../interfaces";
 import { ETHER } from "../../math";
@@ -28,9 +28,41 @@ const transactionFilter = (arbitrageOpportunity: ArbitrageOpportunity) => {
 
 const executeOnChain = async (provider: StaticJsonRpcProvider, signer: ethers.Signer, executorAdress: string, arbitrageOpportunity: ArbitrageOpportunity, blockNumber: number) => {
     const executor = new Contract(executorAdress, EXECUTOR_ABI, signer) as Executor
-    return await executor.trade(arbitrageOpportunity.amountIn, arbitrageOpportunity.pairs, blockNumber, {
-        gasLimit: 300000
+    console.log(arbitrageOpportunity);
+    await executor.trade(arbitrageOpportunity.amountIn, arbitrageOpportunity.pairs, blockNumber, {
+
+        gasLimit: 300000,
+        gasPrice: 100000000000
+
     });
+    provider.on("pending", async (tx: Transaction) => {
+        const transactions = await provider.send("txpool_content", []);
+        const pending = transactions.pending as Tx[];
+        const flatten: Transaction[] = [];
+        for (const [_, transactions] of Object.entries(pending)) {
+            flatten.push(...Object.values(transactions));
+        }
+        flatten.sort((a: Transaction, b: Transaction) => {
+            const aBN = BigNumber.from(a.gasPrice)
+            const bBN = BigNumber.from(b.gasPrice)
+            return aBN?.gt(bBN) ? -1 : 1
+        })
+        const highestBid = flatten[0];
+        const signerAddress = await signer.getAddress();
+        if (highestBid.from !== signerAddress) {
+            console.log("highest bit is not my transaction");
+            const newGasPrice = BigNumber.from(highestBid.gasPrice).add(1000);
+            await executor.trade(arbitrageOpportunity.amountIn, arbitrageOpportunity.pairs, blockNumber, {
+                gasLimit: 300000,
+                gasPrice: newGasPrice
+
+            });
+        }
+
+    });
+
 
 }
 
+const nonce: unique symbol = Symbol();
+export interface Tx { address: string, [nonce]: Transaction[] }

@@ -61,8 +61,6 @@
         "timeout": 10000000
     },
     "dependencies": {
-        "@uniswap/swap-router-contracts": "^1.2.0",
-        "@uniswap/v2-core": "^1.0.1",
         "big-integer": "^1.6.51",
         "jsbi": "^4.1.0"
     }
