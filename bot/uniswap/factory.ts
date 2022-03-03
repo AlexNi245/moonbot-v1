@@ -10,13 +10,16 @@ export const UNISWAP_FACTORIES = [
     //Beamswap
     "0x985BcA32293A7A496300a48081947321177a86FD",
     //Solarflaire
-    "0x19B85ae92947E0725d5265fFB3389e7E4F191FDa"
+    "0x19B85ae92947E0725d5265fFB3389e7E4F191FDa",
+    //StellaSwap
+    "0x68A384D826D3678f78BB9FB1533c7E9577dACc0E"
 ]
 
-export const getUniswapPairs = async (provider: providers.Provider): Promise<string[]> => {
-    return (await Promise.all(UNISWAP_FACTORIES
+export const getUniswapPairs = async (provider: providers.Provider, factories: string[]): Promise<string[]> => {
+    return (await Promise.all(factories
         .map(f => fetchUniswapPairs(f, provider))))
         .reduce((agg, current) => { return [...agg, ...current] })
+        .filter(a => a !== undefined);
 }
 
 export const getPairFromFactory = (token0: String, token1: string): Promise<any>[] => {

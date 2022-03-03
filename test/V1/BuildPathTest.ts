@@ -5,7 +5,7 @@ import { Executor, IERC20, UniswapV2Factory, UniswapV2Pair, UniswapV2Query, Unis
 import { Dai, Eth, USDT } from "../../utils/ERC20Utils";
 import { V2PoolWithToken } from "./../../bot/interfaces";
 import { getTokenAddresses } from "./../../bot/uniswap/pairs";
-import { buildPathRec, buildPaths } from "./../../bot/V1/buildPaths";
+import { buildPathRec } from "./../../bot/V1/buildPaths";
 import { mockToken, mockWeth } from "./../utils/Erc20Utils";
 import { mockExecutor, mockUniswapV2Query } from "./../utils/MoonbotUtils";
 import { getPair, setUpFactory, setUpRouter } from "./../utils/UniswapUtils";
@@ -149,12 +149,9 @@ describe("Build Path Test", () => {
 
         const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(p => getTokenAddresses(ethers.provider, p)));
 
-        console.log("POOLS")
-        console.log(poolWithTokens)
-        console.log("-----")
-        const res = buildPaths(poolWithTokens, weth.address)
-        console.log(res);
-        assert(res.length === 2);
+
+        const res = buildPathRec(poolWithTokens, 0, [], [], weth.address);
+        assert(res.length === 1)
     })
 
     it("Draw graph of 3 pairs of the same class", async () => {
@@ -163,20 +160,20 @@ describe("Build Path Test", () => {
 
         const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(p => getTokenAddresses(ethers.provider, p)));
 
-        console.log(pools);
         const res = buildPathRec(poolWithTokens, 0, [], [], weth.address);
         console.log(res);
         assert(res.length === 4)
     })
-    it.only("Draw graph of 4 pairs of the different class", async () => {
+    it("Draw graph of 4 pairs of the different class", async () => {
 
-        const pools = [wethDaiPairOne.address, wethDaiPairTwo.address, wethDaiPairThree.address,wethUsdcPairTwo.address];
+        const pools = [wethDaiPairOne.address, wethDaiPairTwo.address, wethDaiPairThree.address, wethUsdcPairTwo.address];
 
         const poolWithTokens: V2PoolWithToken[] = await Promise.all(pools.map(p => getTokenAddresses(ethers.provider, p)));
 
         console.log(pools);
         const res = buildPathRec(poolWithTokens, 0, [], [], weth.address);
-        console.log(res);
-        console.log(res.length);
+
     })
 })
+//154674510976984736 //Dai/usdc
+//34345963551327328

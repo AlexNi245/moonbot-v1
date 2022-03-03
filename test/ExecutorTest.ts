@@ -209,7 +209,7 @@ describe("Executor test", () => {
     })
 
 
-    it("swap happy path", async () => {
+    it.only("swap happy path", async () => {
         const balanceBefore = await weth.balanceOf(addr2.address);
         const buyFromPair = wethDaiPairThree;
         const sellToPair = wethDaiPairOne;
@@ -221,7 +221,9 @@ describe("Executor test", () => {
 
         console.log(amountIn, dir);
 
-        await executor.trade(amountIn, [buyFromPair.address, sellToPair.address], 1);
+        const t =  await executor.populateTransaction.trade(amountIn, [buyFromPair.address, sellToPair.address], 1);
+     
+        console.log(t)
         const balanceAfter = await weth.balanceOf(addr2.address);
         const profit = balanceAfter.sub(balanceBefore);
 

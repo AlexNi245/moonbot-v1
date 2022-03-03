@@ -7,13 +7,16 @@
         "outDir": "dist",
         "resolveJsonModule": true,
         "allowJs": true,
-        "baseUrl": "./"
+        "baseUrl": "./",
+        "lib": [
+            "ES2020.Promise",
+          ]
     },
     "include": [
         "./scripts",
         "./test",
         "./deploy"
-    ],
+, "bot/V1/bestpool.ts"    ],
     "files": [
         "./hardhat.config.ts",
         "./helper-hardhat-config.ts"
