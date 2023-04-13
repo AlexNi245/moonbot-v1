@@ -53,7 +53,6 @@ class MoonbotV1 {
 
 
         const poolsWithTokens: V2PoolWithToken[] = poolWithTokensPromises.map((p) => {
-
             if (p.status === "fulfilled") {
                 return p.value
             }
@@ -64,16 +63,17 @@ class MoonbotV1 {
 
     }
 
-    private async fetchPrices() {
-        const prices = await fetchBalanceFromUniswap(this.provider, this.uniswapV2QueryAddress, this.poolWithTokens)
 
-        prices.forEach(p => {
-            p[p.address] = p
-        })
+    // private async fetchPrices() {
+    //     const prices = await fetchBalanceFromUniswap(this.provider, this.uniswapV2QueryAddress, this.poolWithTokens)
 
-    }
+    //     prices.forEach(p => {
+    //         p[p.address] = p
+    //     })
 
-    private async assembleGraph() {
+    // }
+
+    public async assembleGraph() {
         //const allPairs = await getUniswapPairs(this.provider, this.factories);
         const allPairs = BEST_POOLS;
         const poolWithTokensPromises: PromiseSettledResult<V2PoolWithToken>[] = await Promise.allSettled(allPairs.map(p => getTokenAddresses(this.provider, p)));
@@ -89,14 +89,19 @@ class MoonbotV1 {
 
         console.log("pools length : ", poolsWithTokens.length);
         const g = buildPathRec(poolsWithTokens, 0, [], [], this.target)
-            .filter(s => s.length < 7)
+            .filter(s => s.length < 10)
             .filter(s => {
                 const first = s[0];
                 const last = s[s.length - 1];
 
                 return (
-                    last.token1.toLowerCase() === this.target.toLowerCase() ||
-                    last.token0.toLowerCase() === this.target.toLowerCase()
+                    (last.token1.toLowerCase() === this.target.toLowerCase() ||
+                        last.token0.toLowerCase() === this.target.toLowerCase())
+                        
+                        &&
+                        (
+                        first.token1.toLowerCase() === this.target.toLowerCase() ||
+                        first.token0.toLowerCase() === this.target.toLowerCase())
 
                 )
             })
@@ -125,7 +130,7 @@ const main = async () => {
 
 
     const moonbot = new MoonbotV1(MOONBEAM_PROVIDER, QUERY_ADDRESS, TARGET, UNISWAP_FACTORIES);
-    await moonbot.init()
+    await moonbot.assembleGraph()
 
 }
 

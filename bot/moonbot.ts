@@ -1,10 +1,8 @@
-import { BigNumber, ethers } from "ethers";
-import { ArbitrageOpportunity, V2PoolWithPrices, V2PoolWithReserve, V2PoolWithToken } from "./interfaces";
-import { calcProfitMaximizingTrade } from "./math";
-import { calcPoolPrices, filterEmptyPools, getTokenAddresses, groupByTokens } from "./uniswap/pairs";
-import { fetchBalanceFromUniswap } from "./uniswap/query";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
-import { formatEther, parseEther } from "ethers/lib/utils";
+import { ArbitrageOpportunity, V2PoolWithReserve, V2PoolWithToken } from "./interfaces";
+import { calcProfitMaximizingTrade } from "./math";
+import { filterEmptyPools, getTokenAddresses, groupByTokens } from "./uniswap/pairs";
+import { fetchBalanceFromUniswap } from "./uniswap/query";
 
 export const evaluteProfitInPools = async (provider: StaticJsonRpcProvider, uniswapV2QueryAddress: string, pools: string[], target: string): Promise<ArbitrageOpportunity[]> => {
 
