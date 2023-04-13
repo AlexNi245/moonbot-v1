@@ -15,10 +15,7 @@ import "./tasks/balance";
 import "./tasks/block-number";
 import "./tasks/create-collectibles";
 
-
-// 0x5e6ab24fc08d53a4ed77aa1a61d08fdb519c080f
-const PRIVATE_KEY = "0xbf919b7161676e72f22662fc352ae667f9fc418bd0ccc14f75386fb23904f739";
-
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 const accounts = {
     // use default accounts
@@ -36,12 +33,12 @@ module.exports = {
             //     url: "https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa",
             //     blockNumber: 180643,
             // },
-            allowUnlimitedContractSize: true
+            allowUnlimitedContractSize: true,
         },
         moonbeam: {
-            url: 'https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa',
+            url: "https://moonbeam-api.bwarelabs.com/2ef54577-655b-418e-b168-3ad0695dd7fa",
             chainId: 1284, //(hex: 0x504),
-            accounts: [PRIVATE_KEY] // Insert your private key here
+            accounts: [PRIVATE_KEY], // Insert your private key here
         },
         localhost: {},
     },

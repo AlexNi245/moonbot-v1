@@ -8,6 +8,7 @@ import { evaluteProfitInPools } from "./../bot/moonbot";
 import { mockToken, mockWeth } from "./utils/Erc20Utils";
 import { mockExecutor, mockUniswapV2Query } from "./utils/MoonbotUtils";
 import { getPair, setUpFactory, setUpRouter } from "./utils/UniswapUtils";
+import { BigNumber, Transaction } from "ethers";
 
 describe("Evaluation  test", () => {
     let dai: IERC20;
@@ -160,14 +161,14 @@ describe("Evaluation  test", () => {
         assert(profit.gt(0));
     })
 
-    it("Find opportuities between multiple", async () => {
+    it.only("Find opportuities between multiple", async () => {
         const pools = [wethDaiPairThree, wethDaiPairTwo, wethDaiPairOne].map(p => p.address);
         const opportuities = await evaluteProfitInPools(ethers.provider, uniswapV2Query.address, pools, weth.address);
 
         const filtered = opportuities.filter(o => o.direction)
 
 
-        const trade = filtered[filtered.length-1];
+        const trade = filtered[filtered.length - 1];
 
 
         const balanceBefore = await weth.balanceOf(addr2.address);
@@ -177,6 +178,21 @@ describe("Evaluation  test", () => {
         const profit = balanceAfter.sub(balanceBefore);
         console.log(`Tader made ${printEth(profit)} Eth profit`)
         assert(profit.gt(0));
+    })
+    it.only("Test transaction", () => {
+        const t: Transaction = {
+            from: addr1.address,
+            to: addr2.address,
+
+            value: BigNumber.from(100),
+            nonce: 0,
+            gasLimit: BigNumber.from(500),
+            gasPrice: BigNumber.from(1234),
+            data: "0x787",
+            chainId: 0
+        }
+        
+        
     })
 
 })
